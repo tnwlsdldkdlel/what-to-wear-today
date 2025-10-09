@@ -1,51 +1,97 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:get/get.dart';
+import 'package:geolocator/geolocator.dart';
 
 import 'package:what_to_wear_today/app/app.dart';
-import 'package:what_to_wear_today/core/models/weather_models.dart';
-import 'package:what_to_wear_today/core/providers/app_providers.dart';
+import 'package:what_to_wear_today/core/models/recommendation.dart';
+import 'package:what_to_wear_today/core/services/location_service.dart';
+import 'package:what_to_wear_today/core/services/recommendation_service.dart';
+import 'package:what_to_wear_today/features/home/controllers/home_controller.dart';
+import 'package:what_to_wear_today/features/home/views/home_view.dart';
 
 void main() {
-  testWidgets('위치 선택 버튼과 바텀시트가 노출된다', (WidgetTester tester) async {
-    const testLocation = LocationPoint(
-      latitude: 37.5,
-      longitude: 127.0,
-      locality: '테스트 위치',
-    );
+  TestWidgetsFlutterBinding.ensureInitialized();
 
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: [
-          locationPointProvider.overrideWith((ref) async => testLocation),
-        ],
-        child: const WearTodayApp(),
-      ),
-    );
-
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 100));
-
-    expect(find.text('테스트 위치'), findsOneWidget);
-
-    await tester.tap(find.text('테스트 위치'));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 300));
-
-    expect(find.text('지역 선택'), findsOneWidget);
-    final searchField = find.byType(TextField);
-    expect(searchField, findsOneWidget);
-
-    await tester.enterText(searchField, '강남');
-    await tester.pump(const Duration(milliseconds: 200));
-
-    expect(find.text('서울특별시 강남구'), findsOneWidget);
+  setUp(() {
+    Get.testMode = true;
   });
+
+  tearDown(() async {
+    await Get.deleteAll(force: true);
+  });
+
+  testWidgets('홈 화면이 추천 문구와 공유 버튼을 표시한다', (tester) async {
+    final locationService = _FakeLocationService();
+    final recommendationService = _FakeRecommendationService();
+    final controller = HomeController(
+      locationService: locationService,
+      recommendationService: recommendationService,
+    );
+
+    Get.put<HomeController>(controller);
+
+    await tester.pumpWidget(const GetMaterialApp(home: HomeView()));
+    await tester.pump();
+
+    expect(find.text('오늘 뭐 입음?'), findsOneWidget);
+    expect(find.text('서울 강남구'), findsOneWidget);
+    expect(find.textContaining('니트'), findsOneWidget);
+    expect(find.text('내 착장 공유하기'), findsOneWidget);
+  });
+
+  testWidgets('OutfitApp은 초기 라우트로 홈 화면을 연다', (tester) async {
+    Get.put<LocationService>(_FakeLocationService());
+    Get.put<RecommendationService>(_FakeRecommendationService());
+    Get.put<HomeController>(HomeController(
+      locationService: Get.find<LocationService>(),
+      recommendationService: Get.find<RecommendationService>(),
+    ));
+
+    await tester.pumpWidget(const OutfitApp());
+    await tester.pump();
+
+    expect(find.byType(HomeView), findsOneWidget);
+  });
+}
+
+class _FakeLocationService extends LocationService {
+  @override
+  Future<Position> getCurrentPosition() async => Position(
+        longitude: 127.0276,
+        latitude: 37.4979,
+        timestamp: DateTime(2025, 10, 9),
+        accuracy: 1,
+        altitude: 0,
+        heading: 0,
+        speed: 0,
+        speedAccuracy: 0,
+        headingAccuracy: 0,
+        altitudeAccuracy: 0,
+        floor: 0,
+        isMocked: true,
+      );
+
+  @override
+  Future<String> resolvePlacemark(Position position) async => '서울 강남구';
+}
+
+class _FakeRecommendationService extends RecommendationService {
+  @override
+  Future<Recommendation> fetchRecommendation({
+    required double latitude,
+    required double longitude,
+    String? areaName,
+  }) async {
+    return Recommendation(
+      area: areaName ?? '서울 강남구',
+      temperature: 23.4,
+      weatherIcon: 'sunny',
+      tops: [RecommendationItem(label: '🧥 니트', probability: 0.6)],
+      bottoms: [RecommendationItem(label: '👖 청바지', probability: 0.55)],
+      outerwear: [RecommendationItem(label: '🧥 자켓', probability: 0.2)],
+      shoes: [RecommendationItem(label: '👟 스니커즈', probability: 0.7)],
+      accessories: [RecommendationItem(label: '🧢 모자', probability: 0.4)],
+    );
+  }
 }

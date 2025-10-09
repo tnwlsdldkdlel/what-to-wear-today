@@ -1,62 +1,39 @@
-# 오늘 뭐 입음?
+# 오늘 뭐 입음? (What to Wear Today?)
 
-현재 위치와 개인 성향(성별·체감 민감도)을 반영해 오늘 입기 좋은 옷차림을 빠르게 추천해 주는 Flutter 앱입니다.
+Flutter + Supabase 기반의 하이퍼로컬 착장 추천 앱입니다. 사용자가 지금 입은 옷과 체감 온도를 공유하면, 주변 지역의 데이터를 바탕으로 확률 기반 추천을 제공합니다.
 
-## 화면 구성
+## 주요 기능 (MVP)
 
-### 홈 화면
+- 착장 데이터 제출 플로우: 이모지 기반 UI로 빠르게 의상을 입력하고 Supabase에 저장.
+- 홈 추천 화면: 현재 위치를 기반으로 GET `/recommendation/local` API를 호출하여 확률 기반 추천 문장, 날씨, 온도 표시.
+- Supabase 인증 및 RLS: 익명 인증과 Row-Level Security 정책으로 사용자 데이터를 보호.
 
-- 현재 위치의 기온, 체감 온도, 습도, 바람 등을 카드 형태로 요약 표시합니다.
-- 사용자의 민감도 설정을 반영한 "오늘 뭐 입음?" 헤드라인과 세부 옷차림 추천을 제공합니다.
-- 시간대별 예보를 가로 스크롤 목록으로 보여 줘서 오전/오후 일정에 맞춘 옷차림을 계획할 수 있습니다.
-- 7일간의 예보를 요약 카드로 제공하며, 각 날짜별 추천 코멘트를 확인할 수 있습니다.
-- 당겨서 새로고침(Pull to refresh)으로 최신 날씨 정보를 즉시 갱신할 수 있습니다.
+## 기술 스택
 
-### 개인화 설정 화면
+- Flutter 3 + GetX 상태관리
+- Supabase (PostgreSQL, Auth, Realtime)
+- HTTP 기반 외부 추천 API 연동
+- Open-Meteo API를 통한 실시간 날씨 데이터 수집
+- Geolocator/Geocoding을 통한 위치 권한 및 역지오코딩 처리
 
-- 성별(여성/남성/논바이너리/선택 안함) 옵션을 타원형 Chip UI로 선택합니다.
-- 체감 민감도(추위를 많이 탐/보통/더위를 많이 탐)를 세그먼트 버튼으로 조정합니다.
-- 설정 값은 즉시 저장되어 홈 화면의 옷차림 추천에 반영됩니다.
-- 처음 앱을 실행했을 때 기본값(성별: 선택 안함, 민감도: 보통)에서 필요에 따라 변경할 수 있습니다.
+## 개발 환경 설정
 
-### 향후 추가 예정
+1. 환경 변수 설정 (`.env` 또는 런치 스크립트)
+   - `cp .env.example .env`로 예시 파일을 복사한 뒤 값을 채워 넣습니다.
+   - `SUPABASE_URL`
+   - `SUPABASE_ANON_KEY`
+   - 참고: `.env.example` 파일에 기본 키 목록이 포함되어 있으며, Open-Meteo API는 별도 키가 필요 없습니다.
+2. Flutter 의존성 설치
+   ```bash
+   flutter pub get
+   ```
+3. Supabase 정책 적용
+   ```sql
+   \i supabase/policies.sql
+   ```
+4. 앱 실행
+   ```bash
+   flutter run
+   ```
 
-- 위치 허용 여부에 따른 안내 화면 및 권한 설정 플로우
-- 외부 날씨 API 연동 완료 시 시간대별/주간 데이터의 실제 값 표시
-- 즐겨찾는 지역을 등록하고 빠르게 전환할 수 있는 화면
-
-## 프로젝트 구조
-
-```
-lib/
-  app/                     # 전체 앱(MaterialApp, 라우팅) 엔트리
-  core/
-    advice/               # 옷차림 추천 알고리즘
-    location/             # 위치 서비스 및 권한 처리
-    models/               # Freezed 기반 데이터/도메인 모델
-    providers/            # 전역 Riverpod 프로바이더 묶음
-    storage/              # SharedPreferences 연동
-    weather_api/          # 날씨 API 클라이언트와 리포지터리
-  features/
-    home/                 # 홈 화면 UI와 상태
-    settings/             # 개인화 설정 화면 UI
-    shared/               # 공유 위젯, 헬퍼
-test/                     # 위젯 및 단위 테스트
-```
-
-## 개발 환경
-
-- Flutter 3.35.4
-- 주요 패키지: `flutter_riverpod`, `dio`, `freezed`, `json_serializable`, `geolocator`, `shared_preferences`
-
-## 실행 방법
-
-```bash
-flutter run
-```
-
-단위/위젯 테스트 실행:
-
-```bash
-flutter test
-```
+자세한 기능 요구 사항은 `docs/PRD.md`, 디자인 가이드는 `docs/DESIGN.md`를 참고하세요.
