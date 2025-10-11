@@ -4,11 +4,15 @@ import 'package:get/get.dart';
 import 'package:geolocator/geolocator.dart';
 
 import 'package:what_to_wear_today/app/app.dart';
+import 'package:what_to_wear_today/core/models/outfit_submission.dart';
 import 'package:what_to_wear_today/core/models/recommendation.dart';
+import 'package:what_to_wear_today/core/services/auth_service.dart';
 import 'package:what_to_wear_today/core/services/location_service.dart';
 import 'package:what_to_wear_today/core/services/recommendation_service.dart';
+import 'package:what_to_wear_today/core/services/supabase_service.dart';
 import 'package:what_to_wear_today/features/home/controllers/home_controller.dart';
 import 'package:what_to_wear_today/features/home/views/home_view.dart';
+import 'package:what_to_wear_today/features/submission/controllers/submission_controller.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -43,6 +47,13 @@ void main() {
   testWidgets('OutfitApp은 초기 라우트로 홈 화면을 연다', (tester) async {
     Get.put<LocationService>(_FakeLocationService());
     Get.put<RecommendationService>(_FakeRecommendationService());
+    Get.put<AuthService>(_FakeAuthService());
+    Get.put<SupabaseService>(_FakeSupabaseService());
+    Get.put<SubmissionController>(SubmissionController(
+      authService: Get.find<AuthService>(),
+      supabaseService: Get.find<SupabaseService>(),
+      locationService: Get.find<LocationService>(),
+    ));
     Get.put<HomeController>(HomeController(
       locationService: Get.find<LocationService>(),
       recommendationService: Get.find<RecommendationService>(),
@@ -52,6 +63,56 @@ void main() {
     await tester.pump();
 
     expect(find.byType(HomeView), findsOneWidget);
+  });
+
+  testWidgets('착장 제출 플로우가 단계별 화면으로 진행된다', (tester) async {
+    Get.put<LocationService>(_FakeLocationService());
+    Get.put<RecommendationService>(_FakeRecommendationService());
+    Get.put<AuthService>(_FakeAuthService());
+    Get.put<SupabaseService>(_FakeSupabaseService());
+    Get.put<SubmissionController>(SubmissionController(
+      authService: Get.find<AuthService>(),
+      supabaseService: Get.find<SupabaseService>(),
+      locationService: Get.find<LocationService>(),
+    ));
+    Get.put<HomeController>(HomeController(
+      locationService: Get.find<LocationService>(),
+      recommendationService: Get.find<RecommendationService>(),
+    ));
+
+    await tester.pumpWidget(const OutfitApp());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('내 착장 공유하기'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('1 · 상의'), findsOneWidget);
+    await tester.tap(find.text('👕 반팔티'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('2 · 하의'), findsOneWidget);
+    await tester.tap(find.text('👖 청바지'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('3 · 아우터'), findsOneWidget);
+    await tester.tap(find.text('아우터 건너뛰기'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('4 · 신발'), findsOneWidget);
+    await tester.tap(find.text('👟 스니커즈'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('5 · 액세서리'), findsOneWidget);
+    await tester.tap(find.text('🧢 모자'));
+    await tester.tap(find.text('다음'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('6 · 체감 온도'), findsOneWidget);
+    await tester.tap(find.text('딱 좋아요'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('제출 전 확인'), findsOneWidget);
+    expect(find.text('제출하기'), findsOneWidget);
   });
 }
 
@@ -94,4 +155,17 @@ class _FakeRecommendationService extends RecommendationService {
       accessories: [RecommendationItem(label: '🧢 모자', probability: 0.4)],
     );
   }
+}
+
+class _FakeAuthService extends AuthService {
+  @override
+  Future<void> ensureSession() async {}
+
+  @override
+  String? get currentUserId => 'test-user';
+}
+
+class _FakeSupabaseService extends SupabaseService {
+  @override
+  Future<void> submitOutfit(OutfitSubmission submission) async {}
 }

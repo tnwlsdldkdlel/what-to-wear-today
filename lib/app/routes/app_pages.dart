@@ -3,7 +3,7 @@ import 'package:get/get.dart';
 import '../../features/home/home_binding.dart';
 import '../../features/home/views/home_view.dart';
 import '../../features/submission/submission_binding.dart';
-import '../../features/submission/views/submission_view.dart';
+import '../../features/submission/views/submission_steps.dart';
 import 'app_routes.dart';
 
 class AppPages {
@@ -17,9 +17,45 @@ class AppPages {
       page: HomeView.new,
       binding: HomeBinding(),
     ),
-    GetPage<SubmissionView>(
-      name: AppRoutes.submission,
-      page: SubmissionView.new,
+    GetPage<SubmissionTopStepView>(
+      name: AppRoutes.submissionTop,
+      page: SubmissionTopStepView.new,
+      binding: SubmissionBinding(),
+      transition: Transition.cupertino,
+    ),
+    GetPage<SubmissionBottomStepView>(
+      name: AppRoutes.submissionBottom,
+      page: SubmissionBottomStepView.new,
+      binding: SubmissionBinding(),
+      transition: Transition.cupertino,
+    ),
+    GetPage<SubmissionOuterStepView>(
+      name: AppRoutes.submissionOuter,
+      page: SubmissionOuterStepView.new,
+      binding: SubmissionBinding(),
+      transition: Transition.cupertino,
+    ),
+    GetPage<SubmissionShoesStepView>(
+      name: AppRoutes.submissionShoes,
+      page: SubmissionShoesStepView.new,
+      binding: SubmissionBinding(),
+      transition: Transition.cupertino,
+    ),
+    GetPage<SubmissionAccessoriesStepView>(
+      name: AppRoutes.submissionAccessories,
+      page: SubmissionAccessoriesStepView.new,
+      binding: SubmissionBinding(),
+      transition: Transition.cupertino,
+    ),
+    GetPage<SubmissionComfortStepView>(
+      name: AppRoutes.submissionComfort,
+      page: SubmissionComfortStepView.new,
+      binding: SubmissionBinding(),
+      transition: Transition.cupertino,
+    ),
+    GetPage<SubmissionReviewStepView>(
+      name: AppRoutes.submissionReview,
+      page: SubmissionReviewStepView.new,
       binding: SubmissionBinding(),
       transition: Transition.cupertino,
     ),

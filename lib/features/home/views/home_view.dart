@@ -46,7 +46,7 @@ class HomeView extends GetView<HomeController> {
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => Get.toNamed(AppRoutes.submission),
+        onPressed: () => Get.toNamed(AppRoutes.submissionTop),
         label: const Text('내 착장 공유하기'),
         icon: const Icon(Icons.checkroom_outlined),
         backgroundColor: AppColors.accent,

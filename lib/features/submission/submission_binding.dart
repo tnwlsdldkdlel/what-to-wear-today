@@ -8,13 +8,21 @@ import '../../features/submission/controllers/submission_controller.dart';
 class SubmissionBinding extends Bindings {
   @override
   void dependencies() {
-    Get.lazyPut<SupabaseService>(() => SupabaseService());
-    Get.lazyPut<LocationService>(() => LocationService());
-    Get.lazyPut<AuthService>(() => AuthService());
-    Get.put<SubmissionController>(SubmissionController(
-      authService: Get.find<AuthService>(),
-      supabaseService: Get.find<SupabaseService>(),
-      locationService: Get.find<LocationService>(),
-    ));
+    if (!Get.isRegistered<SupabaseService>()) {
+      Get.lazyPut<SupabaseService>(() => SupabaseService());
+    }
+    if (!Get.isRegistered<LocationService>()) {
+      Get.lazyPut<LocationService>(() => LocationService());
+    }
+    if (!Get.isRegistered<AuthService>()) {
+      Get.lazyPut<AuthService>(() => AuthService());
+    }
+    if (!Get.isRegistered<SubmissionController>()) {
+      Get.put<SubmissionController>(SubmissionController(
+        authService: Get.find<AuthService>(),
+        supabaseService: Get.find<SupabaseService>(),
+        locationService: Get.find<LocationService>(),
+      ));
+    }
   }
 }
