@@ -19,6 +19,7 @@ dependencies:
   intl: ^0.20.2
   http: ^1.2.1
   flutter_dotenv: ^5.1.0
+  flutter_svg: ^2.0.9
 
 dev_dependencies:
   flutter_test:
@@ -29,3 +30,9 @@ flutter:
   uses-material-design: true
   assets:
     - .env
+    - assets/images/tops/
+    - assets/images/bottoms/
+    - assets/images/outers/
+    - assets/images/shoes/
+    - assets/images/accessories/
+    - assets/images/tops/tshirt.svg

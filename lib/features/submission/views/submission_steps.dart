@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../../app/themes/app_theme.dart';
 import '../../../core/models/outfit_submission.dart';
@@ -302,20 +303,25 @@ class _SingleSelectCards extends StatelessWidget {
     return Obx(
       () {
         final currentSelection = selected.value;
-        return Column(
-          children: [
-            for (var i = 0; i < items.length; i++)
-              Padding(
-                padding:
-                    EdgeInsets.only(bottom: i == items.length - 1 ? 0 : 12),
-                child: _SelectableCard(
-                  label: items[i].label,
-                  assetPath: items[i].assetPath,
-                  isSelected: currentSelection == items[i].label,
-                  onTap: () => onSelect(items[i].label),
-                ),
-              ),
-          ],
+        return GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: items.length,
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            crossAxisSpacing: 16,
+            mainAxisSpacing: 16,
+            childAspectRatio: 0.7,
+          ),
+          itemBuilder: (context, index) {
+            final option = items[index];
+            return _SelectableCard(
+              label: option.label,
+              assetPath: option.assetPath,
+              isSelected: currentSelection == option.label,
+              onTap: () => onSelect(option.label),
+            );
+          },
         );
       },
     );
@@ -336,19 +342,26 @@ class _MultiSelectCards extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Obx(
-      () => Column(
-        children: [
-          for (var i = 0; i < items.length; i++)
-            Padding(
-              padding: EdgeInsets.only(bottom: i == items.length - 1 ? 0 : 12),
-              child: _SelectableCard(
-                label: items[i].label,
-                assetPath: items[i].assetPath,
-                isSelected: selectedItems.contains(items[i].label),
-                onTap: () => onToggle(items[i].label),
-              ),
-            ),
-        ],
+      () => GridView.builder(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        itemCount: items.length,
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          crossAxisSpacing: 16,
+          mainAxisSpacing: 16,
+          childAspectRatio: 0.7,
+        ),
+        itemBuilder: (context, index) {
+          final option = items[index];
+          final isSelected = selectedItems.contains(option.label);
+          return _SelectableCard(
+            label: option.label,
+            assetPath: option.assetPath,
+            isSelected: isSelected,
+            onTap: () => onToggle(option.label),
+          );
+        },
       ),
     );
   }
@@ -376,10 +389,10 @@ class _SelectableCard extends StatelessWidget {
         duration: const Duration(milliseconds: 200),
         curve: Curves.easeInOut,
         width: double.infinity,
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+        padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
           color: isSelected ? AppColors.primary : Colors.white,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(24),
           border: Border.all(
             color: isSelected
                 ? AppColors.primary
@@ -396,30 +409,43 @@ class _SelectableCard extends StatelessWidget {
                 ]
               : [],
         ),
-        child: Row(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(16),
-              child: Image.asset(
-                assetPath,
-                width: 56,
-                height: 56,
-                fit: BoxFit.cover,
+            AspectRatio(
+              aspectRatio: 1,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(16),
+                child: _buildAssetImage(),
               ),
             ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Text(
-                label,
-                style: theme.textTheme.titleMedium?.copyWith(
-                  color: isSelected ? Colors.white : AppColors.textPrimary,
-                  fontWeight: FontWeight.w700,
-                ),
+            const SizedBox(height: 12),
+            Text(
+              label,
+              textAlign: TextAlign.center,
+              style: theme.textTheme.titleMedium?.copyWith(
+                color: isSelected ? Colors.white : AppColors.textPrimary,
+                fontWeight: FontWeight.w700,
               ),
             ),
           ],
         ),
       ),
+    );
+}
+
+  Widget _buildAssetImage() {
+    final isSvg = assetPath.toLowerCase().endsWith('.svg');
+    if (isSvg) {
+      return SvgPicture.asset(
+        assetPath,
+        fit: BoxFit.cover,
+      );
+    }
+    return Image.asset(
+      assetPath,
+      fit: BoxFit.cover,
     );
   }
 }

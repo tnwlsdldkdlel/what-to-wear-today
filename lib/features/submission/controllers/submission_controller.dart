@@ -38,38 +38,42 @@ class SubmissionController extends GetxController {
   final RxString submitMessage = ''.obs;
 
   final List<ClothingOption> tops = const [
-    ClothingOption(label: '반팔티', assetPath: ''),
-    ClothingOption(label: '셔츠', assetPath: ''),
-    ClothingOption(label: '니트', assetPath: ''),
-    ClothingOption(label: '블라우스', assetPath: ''),
+    ClothingOption(label: '반팔티', assetPath: 'assets/images/tops/tshirt.svg'),
+    ClothingOption(label: '셔츠', assetPath: 'assets/images/tops/shirt.png'),
+    ClothingOption(label: '니트', assetPath: 'assets/images/tops/knit.png'),
+    ClothingOption(label: '블라우스', assetPath: 'assets/images/tops/blouse.png'),
   ];
 
   final List<ClothingOption> bottoms = const [
-    ClothingOption(label: '청바지', assetPath: ''),
-    ClothingOption(label: '반바지', assetPath: ''),
-    ClothingOption(label: '슬랙스', assetPath: ''),
-    ClothingOption(label: '원피스', assetPath: ''),
+    ClothingOption(label: '청바지', assetPath: 'assets/images/bottoms/jeans.png'),
+    ClothingOption(label: '반바지', assetPath: 'assets/images/bottoms/shorts.png'),
+    ClothingOption(label: '슬랙스', assetPath: 'assets/images/bottoms/slacks.png'),
+    ClothingOption(label: '원피스', assetPath: 'assets/images/bottoms/dress.png'),
   ];
 
   final List<ClothingOption> outers = const [
-    ClothingOption(label: '자켓', assetPath: ''),
-    ClothingOption(label: '코트', assetPath: ''),
-    ClothingOption(label: '후드집업', assetPath: ''),
-    ClothingOption(label: '패딩', assetPath: ''),
+    ClothingOption(label: '자켓', assetPath: 'assets/images/outers/jacket.png'),
+    ClothingOption(label: '코트', assetPath: 'assets/images/outers/coat.png'),
+    ClothingOption(label: '후드집업', assetPath: 'assets/images/outers/hoodie.png'),
+    ClothingOption(label: '패딩', assetPath: 'assets/images/outers/padding.png'),
   ];
 
   final List<ClothingOption> shoes = const [
-    ClothingOption(label: '스니커즈', assetPath: ''),
-    ClothingOption(label: '구두', assetPath: ''),
-    ClothingOption(label: '부츠', assetPath: ''),
-    ClothingOption(label: '샌들', assetPath: ''),
+    ClothingOption(
+        label: '스니커즈', assetPath: 'assets/images/shoes/sneakers.png'),
+    ClothingOption(label: '구두', assetPath: 'assets/images/shoes/loafers.png'),
+    ClothingOption(label: '부츠', assetPath: 'assets/images/shoes/boots.png'),
+    ClothingOption(label: '샌들', assetPath: 'assets/images/shoes/sandals.png'),
   ];
 
   final List<ClothingOption> accessories = const [
-    ClothingOption(label: '머플러', assetPath: ''),
-    ClothingOption(label: '장갑', assetPath: ''),
-    ClothingOption(label: '모자', assetPath: ''),
-    ClothingOption(label: '선글라스', assetPath: ''),
+    ClothingOption(
+        label: '머플러', assetPath: 'assets/images/accessories/scarf.png'),
+    ClothingOption(
+        label: '장갑', assetPath: 'assets/images/accessories/gloves.png'),
+    ClothingOption(label: '모자', assetPath: 'assets/images/accessories/hat.png'),
+    ClothingOption(
+        label: '선글라스', assetPath: 'assets/images/accessories/sunglasses.png'),
   ];
 
   void selectTop(String value) {
