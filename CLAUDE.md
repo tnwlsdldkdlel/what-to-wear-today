@@ -2,6 +2,21 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Core Guidelines
+
+- If requirements are ambiguous or conflicting, do not write code immediately. Ask for clarification first.
+- Always include an "Uncertainty Map" block at the end of every response, containing:
+  - The most uncertain points
+  - Potential oversimplifications
+  - Additional questions that could change the answer
+- Always respond in Korean.
+- If request history is unclear, check the `__prompts` folder first to find connections with previous work. If still unclear, ask the user for clarification.
+
+## Required Guidelines
+
+- Record each request in `__prompts/_task` with the format `YYYY-MM-DD_brief-task-title_###.md`, incrementing from the latest number. Include the request content and actual changes made.
+- Before starting work, create a file in `__prompts/_plan` following the same naming convention. Document the task overview, plan, process, and execution results in order.
+
 ## Project Overview
 
 "What to Wear Today?" (오늘 뭐 입음?) is a Flutter + Supabase hyper-local outfit recommendation app. Users submit their current outfit and comfort level, and the app provides data-driven clothing recommendations based on actual submissions from nearby users who reported feeling "just right" at similar temperatures.
@@ -172,6 +187,17 @@ Currently minimal test coverage (only default widget_test.dart). When adding tes
 - **Recommendation Logic**: Currently client-side and temperature-based. Future versions should query aggregated Supabase data filtered by location and "just right" comfort level (see docs/PRD.md).
 - **Location Permissions**: Mandatory for core functionality. Required both at home screen load (for recommendations) and at submission time (for GPS coordinates).
 - **Optional vs Required Fields**: Tops, bottoms, shoes, and comfort are required. Outerwear and accessories are optional (can be skipped).
+
+## Git Commit Convention
+
+- **Language**: Commit messages should be written in Korean (title and body), while keeping the type prefix in English
+- **Format**: `<type>: <Korean description>`
+- **Examples**:
+  - `feat: 사용자 프로필 화면 추가`
+  - `fix: 로그인 오류 해결`
+  - `chore: Claude Code 설정 추가`
+  - `refactor: 홈 컨트롤러 코드 정리`
+  - `docs: README 파일 업데이트`
 
 ## Documentation
 
