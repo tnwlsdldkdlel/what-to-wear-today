@@ -39,9 +39,11 @@ class SubmissionController extends GetxController {
 
   final List<ClothingOption> tops = const [
     ClothingOption(label: '반팔티', assetPath: 'assets/images/tops/tshirt.svg'),
-    ClothingOption(label: '셔츠', assetPath: 'assets/images/tops/shirt.png'),
-    ClothingOption(label: '니트', assetPath: 'assets/images/tops/knit.png'),
-    ClothingOption(label: '블라우스', assetPath: 'assets/images/tops/blouse.png'),
+    ClothingOption(label: '후드티', assetPath: 'assets/images/tops/hood.svg'),
+    ClothingOption(label: '긴팔티', assetPath: 'assets/images/tops/sleeves.svg'),
+    ClothingOption(label: '셔츠', assetPath: 'assets/images/tops/shirt.svg'),
+    ClothingOption(label: '니트', assetPath: 'assets/images/tops/knit.svg'),
+    ClothingOption(label: '맨투맨', assetPath: 'assets/images/tops/man.svg'),
   ];
 
   final List<ClothingOption> bottoms = const [

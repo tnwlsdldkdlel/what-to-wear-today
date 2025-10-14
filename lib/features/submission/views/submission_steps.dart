@@ -237,7 +237,12 @@ class _SubmissionStepScaffold extends StatelessWidget {
     final hasStepLabel = stepLabel != null && stepLabel!.isNotEmpty;
     final hasSubtitle = subtitle != null && subtitle!.isNotEmpty;
     return Scaffold(
+      backgroundColor: AppColors.background,
       appBar: AppBar(
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        backgroundColor: AppColors.background,
+        surfaceTintColor: Colors.transparent,
         leading: IconButton(
           icon: Icon(leadingIcon),
           onPressed: () async {
@@ -252,7 +257,7 @@ class _SubmissionStepScaffold extends StatelessWidget {
       ),
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -267,9 +272,9 @@ class _SubmissionStepScaffold extends StatelessWidget {
                 ),
               ],
               if (hasSubtitle || hasStepLabel)
-                const SizedBox(height: 24)
+                const SizedBox(height: 16)
               else
-                const SizedBox(height: 12),
+                const SizedBox(height: 0),
               Expanded(
                 child: SingleChildScrollView(
                   child: body,
@@ -309,8 +314,8 @@ class _SingleSelectCards extends StatelessWidget {
           itemCount: items.length,
           gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: 2,
-            crossAxisSpacing: 16,
-            mainAxisSpacing: 16,
+            crossAxisSpacing: 10,
+            mainAxisSpacing: 10,
             childAspectRatio: 0.7,
           ),
           itemBuilder: (context, index) {
@@ -396,13 +401,13 @@ class _SelectableCard extends StatelessWidget {
           border: Border.all(
             color: isSelected
                 ? AppColors.primary
-                : AppColors.textSecondary.withOpacity(0.2),
+                : AppColors.textSecondary.withValues(alpha: 0.2),
             width: 1.5,
           ),
           boxShadow: isSelected
               ? [
                   BoxShadow(
-                    color: AppColors.primary.withOpacity(0.25),
+                    color: AppColors.primary.withValues(alpha: 0.25),
                     blurRadius: 18,
                     offset: const Offset(0, 6),
                   ),
@@ -433,14 +438,14 @@ class _SelectableCard extends StatelessWidget {
         ),
       ),
     );
-}
+  }
 
   Widget _buildAssetImage() {
     final isSvg = assetPath.toLowerCase().endsWith('.svg');
     if (isSvg) {
       return SvgPicture.asset(
         assetPath,
-        fit: BoxFit.cover,
+        fit: BoxFit.contain,
       );
     }
     return Image.asset(
