@@ -5,6 +5,5 @@ abstract class AppRoutes {
   static const submissionOuter = '/submission/outer';
   static const submissionShoes = '/submission/shoes';
   static const submissionAccessories = '/submission/accessories';
-  static const submissionComfort = '/submission/comfort';
   static const submissionReview = '/submission/review';
 }

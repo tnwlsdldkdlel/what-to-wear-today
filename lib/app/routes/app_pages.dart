@@ -47,12 +47,6 @@ class AppPages {
       binding: SubmissionBinding(),
       transition: Transition.cupertino,
     ),
-    GetPage<SubmissionComfortStepView>(
-      name: AppRoutes.submissionComfort,
-      page: SubmissionComfortStepView.new,
-      binding: SubmissionBinding(),
-      transition: Transition.cupertino,
-    ),
     GetPage<SubmissionReviewStepView>(
       name: AppRoutes.submissionReview,
       page: SubmissionReviewStepView.new,

@@ -47,53 +47,55 @@ class SubmissionController extends GetxController {
   ];
 
   final List<ClothingOption> bottoms = const [
-    ClothingOption(label: '청바지', assetPath: 'assets/images/bottoms/jeans.png'),
-    ClothingOption(label: '반바지', assetPath: 'assets/images/bottoms/shorts.png'),
-    ClothingOption(label: '슬랙스', assetPath: 'assets/images/bottoms/slacks.png'),
-    ClothingOption(label: '원피스', assetPath: 'assets/images/bottoms/dress.png'),
+    ClothingOption(label: '긴바지', assetPath: 'assets/images/bottoms/pants.svg'),
+    ClothingOption(label: '반바지', assetPath: 'assets/images/bottoms/shorts.svg'),
+    ClothingOption(label: '치마', assetPath: 'assets/images/bottoms/skirt.svg'),
   ];
 
   final List<ClothingOption> outers = const [
-    ClothingOption(label: '자켓', assetPath: 'assets/images/outers/jacket.png'),
-    ClothingOption(label: '코트', assetPath: 'assets/images/outers/coat.png'),
-    ClothingOption(label: '후드집업', assetPath: 'assets/images/outers/hoodie.png'),
-    ClothingOption(label: '패딩', assetPath: 'assets/images/outers/padding.png'),
+    ClothingOption(label: '후드집업', assetPath: 'assets/images/outers/zip-up.svg'),
+    ClothingOption(
+        label: '가디건', assetPath: 'assets/images/outers/cardigan.svg'),
+    ClothingOption(label: '코트', assetPath: 'assets/images/outers/coat.svg'),
+    ClothingOption(label: '패딩', assetPath: 'assets/images/outers/padding.svg'),
   ];
 
   final List<ClothingOption> shoes = const [
-    ClothingOption(
-        label: '스니커즈', assetPath: 'assets/images/shoes/sneakers.png'),
-    ClothingOption(label: '구두', assetPath: 'assets/images/shoes/loafers.png'),
-    ClothingOption(label: '부츠', assetPath: 'assets/images/shoes/boots.png'),
-    ClothingOption(label: '샌들', assetPath: 'assets/images/shoes/sandals.png'),
+    ClothingOption(label: '운동화', assetPath: 'assets/images/shoes/sneakers.svg'),
+    ClothingOption(label: '장화', assetPath: 'assets/images/shoes/boots.svg'),
+    ClothingOption(label: '샌들', assetPath: 'assets/images/shoes/flip.svg'),
+    ClothingOption(label: '어그부츠', assetPath: 'assets/images/shoes/agg.svg'),
   ];
 
   final List<ClothingOption> accessories = const [
     ClothingOption(
-        label: '머플러', assetPath: 'assets/images/accessories/scarf.png'),
+        label: '목도리', assetPath: 'assets/images/accessories/muffler.svg'),
+    ClothingOption(label: '모자', assetPath: 'assets/images/accessories/hat.svg'),
     ClothingOption(
-        label: '장갑', assetPath: 'assets/images/accessories/gloves.png'),
-    ClothingOption(label: '모자', assetPath: 'assets/images/accessories/hat.png'),
+        label: '우산', assetPath: 'assets/images/accessories/umbrella.svg'),
     ClothingOption(
-        label: '선글라스', assetPath: 'assets/images/accessories/sunglasses.png'),
+        label: '장갑', assetPath: 'assets/images/accessories/gloves.svg'),
   ];
 
-  void selectTop(String value) {
+  void selectTop(String value) async {
     selectedTop.value = value;
+    await Future.delayed(const Duration(milliseconds: 300));
     Get.toNamed(AppRoutes.submissionBottom);
   }
 
-  void selectBottom(String value) {
+  void selectBottom(String value) async {
     selectedBottom.value = value;
+    await Future.delayed(const Duration(milliseconds: 300));
     Get.toNamed(AppRoutes.submissionOuter);
   }
 
-  void selectOuter(String value) {
+  void selectOuter(String value) async {
     if (selectedOuter.value == value) {
       selectedOuter.value = '';
     } else {
       selectedOuter.value = value;
     }
+    await Future.delayed(const Duration(milliseconds: 300));
     Get.toNamed(AppRoutes.submissionShoes);
   }
 
@@ -102,8 +104,9 @@ class SubmissionController extends GetxController {
     Get.toNamed(AppRoutes.submissionShoes);
   }
 
-  void selectShoes(String value) {
+  void selectShoes(String value) async {
     selectedShoes.value = value;
+    await Future.delayed(const Duration(milliseconds: 300));
     Get.toNamed(AppRoutes.submissionAccessories);
   }
 
@@ -117,17 +120,13 @@ class SubmissionController extends GetxController {
 
   void skipAccessory() {
     selectedAccessories.clear();
-    Get.toNamed(AppRoutes.submissionComfort);
+    Get.toNamed(AppRoutes.submissionReview);
   }
 
   void proceedFromAccessories() {
-    Get.toNamed(AppRoutes.submissionComfort);
-  }
-
-  void selectComfort(ComfortLevel level) {
-    selectedComfort.value = level;
     Get.toNamed(AppRoutes.submissionReview);
   }
+
 
   Future<bool> confirmCancel() async {
     final result = await Get.dialog<bool>(
@@ -181,8 +180,7 @@ class SubmissionController extends GetxController {
   bool get _canSubmit =>
       selectedTop.value.isNotEmpty &&
       selectedBottom.value.isNotEmpty &&
-      selectedShoes.value.isNotEmpty &&
-      selectedComfort.value != null;
+      selectedShoes.value.isNotEmpty;
 
   OutfitSubmission _buildSubmission(Position position) {
     return OutfitSubmission(
@@ -194,7 +192,7 @@ class SubmissionController extends GetxController {
       shoes: selectedShoes.value,
       accessories:
           selectedAccessories.isEmpty ? null : selectedAccessories.toList(),
-      comfort: selectedComfort.value!,
+      comfort: selectedComfort.value ?? ComfortLevel.justRight,
       reportedAt: DateTime.now(),
       userId: _authService.currentUserId,
     );
@@ -222,16 +220,24 @@ class SubmissionController extends GetxController {
   String get accessoriesLabel =>
       selectedAccessories.isEmpty ? '선택 안 함' : selectedAccessories.join(', ');
 
-  String get comfortLabel {
-    switch (selectedComfort.value) {
-      case ComfortLevel.hot:
-        return '덥다';
-      case ComfortLevel.justRight:
-        return '딱 좋아요';
-      case ComfortLevel.cold:
-        return '춥다';
-      default:
-        return '미선택';
-    }
-  }
+  ClothingOption? get selectedTopOption => selectedTop.value.isEmpty
+      ? null
+      : tops.firstWhere((item) => item.label == selectedTop.value);
+
+  ClothingOption? get selectedBottomOption => selectedBottom.value.isEmpty
+      ? null
+      : bottoms.firstWhere((item) => item.label == selectedBottom.value);
+
+  ClothingOption? get selectedOuterOption => selectedOuter.value.isEmpty
+      ? null
+      : outers.firstWhere((item) => item.label == selectedOuter.value);
+
+  ClothingOption? get selectedShoesOption => selectedShoes.value.isEmpty
+      ? null
+      : shoes.firstWhere((item) => item.label == selectedShoes.value);
+
+  List<ClothingOption> get selectedAccessoriesOptions => selectedAccessories
+      .map((label) =>
+          accessories.firstWhere((item) => item.label == label))
+      .toList();
 }

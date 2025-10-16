@@ -3,7 +3,6 @@ import 'package:get/get.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../../app/themes/app_theme.dart';
-import '../../../core/models/outfit_submission.dart';
 import '../controllers/submission_controller.dart';
 
 class SubmissionTopStepView extends GetView<SubmissionController> {
@@ -61,7 +60,10 @@ class SubmissionOuterStepView extends GetView<SubmissionController> {
         alignment: Alignment.center,
         child: TextButton(
           onPressed: controller.skipOuter,
-          child: const Text('건너뛰기'),
+          child: const Text(
+            '건너뛰기',
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
         ),
       ),
       body: _SingleSelectCards(
@@ -108,46 +110,20 @@ class SubmissionAccessoriesStepView extends GetView<SubmissionController> {
         children: [
           ElevatedButton(
             onPressed: controller.proceedFromAccessories,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+            ),
             child: const Text('다음'),
           ),
           TextButton(
             onPressed: controller.skipAccessory,
-            child: const Text('건너뛰기'),
+            child: const Text(
+              '건너뛰기',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class SubmissionComfortStepView extends GetView<SubmissionController> {
-  const SubmissionComfortStepView({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return _SubmissionStepScaffold(
-      title: '체감 온도 선택',
-      onBackPressed: () async => Get.back(),
-      body: Wrap(
-        spacing: 12,
-        runSpacing: 12,
-        children: ComfortLevel.values.map((level) {
-          return Obx(
-            () => ChoiceChip(
-              label: Text(_comfortLabel(level)),
-              selected: controller.selectedComfort.value == level,
-              selectedColor: _comfortColor(level),
-              backgroundColor: _comfortColor(level).withOpacity(0.12),
-              labelStyle: TextStyle(
-                color: controller.selectedComfort.value == level
-                    ? Colors.white
-                    : AppColors.textPrimary,
-                fontWeight: FontWeight.w600,
-              ),
-              onSelected: (_) => controller.selectComfort(level),
-            ),
-          );
-        }).toList(),
       ),
     );
   }
@@ -159,19 +135,41 @@ class SubmissionReviewStepView extends GetView<SubmissionController> {
   @override
   Widget build(BuildContext context) {
     return _SubmissionStepScaffold(
-      title: '제출 전 확인',
-      subtitle: '선택한 착장을 확인하세요.',
+      title: '확인',
       onBackPressed: () async => Get.back(),
       body: Obx(
         () => Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _ReviewRow(label: '상의', value: controller.topLabel),
-            _ReviewRow(label: '하의', value: controller.bottomLabel),
-            _ReviewRow(label: '아우터', value: controller.outerLabel),
-            _ReviewRow(label: '신발', value: controller.shoesLabel),
-            _ReviewRow(label: '액세서리', value: controller.accessoriesLabel),
-            _ReviewRow(label: '체감 온도', value: controller.comfortLabel),
+            if (controller.selectedTopOption != null)
+              _ReviewItemSection(
+                label: '상의',
+                item: controller.selectedTopOption!,
+              ),
+            if (controller.selectedBottomOption != null)
+              _ReviewItemSection(
+                label: '하의',
+                item: controller.selectedBottomOption!,
+              ),
+            if (controller.selectedOuterOption != null)
+              _ReviewItemSection(
+                label: '아우터',
+                item: controller.selectedOuterOption!,
+              )
+            else
+              _ReviewEmptySection(label: '아우터'),
+            if (controller.selectedShoesOption != null)
+              _ReviewItemSection(
+                label: '신발',
+                item: controller.selectedShoesOption!,
+              ),
+            if (controller.selectedAccessoriesOptions.isNotEmpty)
+              _ReviewAccessoriesSection(
+                label: '액세서리',
+                items: controller.selectedAccessoriesOptions,
+              )
+            else
+              _ReviewEmptySection(label: '액세서리'),
           ],
         ),
       ),
@@ -183,6 +181,10 @@ class SubmissionReviewStepView extends GetView<SubmissionController> {
               child: ElevatedButton(
                 onPressed:
                     controller.isSubmitting.value ? null : controller.submit,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                ),
                 child: controller.isSubmitting.value
                     ? const SizedBox(
                         width: 20,
@@ -316,7 +318,7 @@ class _SingleSelectCards extends StatelessWidget {
             crossAxisCount: 2,
             crossAxisSpacing: 10,
             mainAxisSpacing: 10,
-            childAspectRatio: 0.7,
+            childAspectRatio: 0.79,
           ),
           itemBuilder: (context, index) {
             final option = items[index];
@@ -346,28 +348,27 @@ class _MultiSelectCards extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Obx(
-      () => GridView.builder(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        itemCount: items.length,
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          crossAxisSpacing: 16,
-          mainAxisSpacing: 16,
-          childAspectRatio: 0.7,
-        ),
-        itemBuilder: (context, index) {
-          final option = items[index];
-          final isSelected = selectedItems.contains(option.label);
-          return _SelectableCard(
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: items.length,
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        crossAxisSpacing: 16,
+        mainAxisSpacing: 16,
+        childAspectRatio: 0.79,
+      ),
+      itemBuilder: (context, index) {
+        final option = items[index];
+        return Obx(
+          () => _SelectableCard(
             label: option.label,
             assetPath: option.assetPath,
-            isSelected: isSelected,
+            isSelected: selectedItems.contains(option.label),
             onTap: () => onToggle(option.label),
-          );
-        },
-      ),
+          ),
+        );
+      },
     );
   }
 }
@@ -455,29 +456,106 @@ class _SelectableCard extends StatelessWidget {
   }
 }
 
-class _ReviewRow extends StatelessWidget {
-  const _ReviewRow({required this.label, required this.value});
+class _ReviewItemSection extends StatelessWidget {
+  const _ReviewItemSection({
+    required this.label,
+    required this.item,
+  });
 
   final String label;
-  final String value;
+  final ClothingOption item;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(
-            width: 80,
-            child: Text(label, style: theme.textTheme.bodyMedium),
+          Text(
+            label,
+            style: theme.textTheme.titleSmall?.copyWith(
+              color: AppColors.textSecondary,
+              fontWeight: FontWeight.w600,
+            ),
           ),
-          const SizedBox(width: 12),
-          Expanded(
+          const SizedBox(height: 8),
+          _ReviewItemCard(item: item),
+        ],
+      ),
+    );
+  }
+}
+
+class _ReviewAccessoriesSection extends StatelessWidget {
+  const _ReviewAccessoriesSection({
+    required this.label,
+    required this.items,
+  });
+
+  final String label;
+  final List<ClothingOption> items;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: theme.textTheme.titleSmall?.copyWith(
+              color: AppColors.textSecondary,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: items.map((item) => _ReviewItemCard(item: item)).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ReviewEmptySection extends StatelessWidget {
+  const _ReviewEmptySection({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: theme.textTheme.titleSmall?.copyWith(
+              color: AppColors.textSecondary,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: AppColors.textSecondary.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
             child: Text(
-              value,
-              style: theme.textTheme.bodyLarge,
+              '선택 안 함',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: AppColors.textSecondary,
+              ),
             ),
           ),
         ],
@@ -486,24 +564,56 @@ class _ReviewRow extends StatelessWidget {
   }
 }
 
-Color _comfortColor(ComfortLevel level) {
-  switch (level) {
-    case ComfortLevel.hot:
-      return AppColors.hot;
-    case ComfortLevel.justRight:
-      return AppColors.justRight;
-    case ComfortLevel.cold:
-      return AppColors.cold;
-  }
-}
+class _ReviewItemCard extends StatelessWidget {
+  const _ReviewItemCard({required this.item});
 
-String _comfortLabel(ComfortLevel level) {
-  switch (level) {
-    case ComfortLevel.hot:
-      return '덥다';
-    case ComfortLevel.justRight:
-      return '딱 좋아요';
-    case ComfortLevel.cold:
-      return '춥다';
+  final ClothingOption item;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isSvg = item.assetPath.toLowerCase().endsWith('.svg');
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: AppColors.textSecondary.withValues(alpha: 0.2),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 48,
+            height: 48,
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: isSvg
+                ? SvgPicture.asset(
+                    item.assetPath,
+                    fit: BoxFit.contain,
+                  )
+                : Image.asset(
+                    item.assetPath,
+                    fit: BoxFit.contain,
+                  ),
+          ),
+          const SizedBox(width: 12),
+          Text(
+            item.label,
+            style: theme.textTheme.bodyLarge?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

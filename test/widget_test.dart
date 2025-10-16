@@ -111,7 +111,7 @@ void main() {
     await tester.tap(find.text('딱 좋아요'));
     await tester.pumpAndSettle();
 
-    expect(find.text('제출 전 확인'), findsOneWidget);
+    expect(find.text('확인'), findsOneWidget);
     expect(find.text('제출하기'), findsOneWidget);
   });
 }

@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 
 class AppColors {
   static const primary = Color(0xFF5C6BC0);
-  static const accent = Color(0xFFFF8A65);
-  static const background = Color(0xFFF5F5F5);
+  static const accent = Color.fromARGB(255, 102, 160, 198);
+  static const background = Color.fromARGB(255, 255, 255, 255);
   static const hot = Color(0xFFEF5350);
   static const justRight = Color(0xFF66BB6A);
   static const cold = Color(0xFF42A5F5);
