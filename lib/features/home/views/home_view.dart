@@ -1,14 +1,28 @@
+import 'package:bottom_picker/bottom_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../../app/routes/app_routes.dart';
 import '../../../app/themes/app_theme.dart';
+import '../../../core/models/notification_settings.dart';
 import '../../../core/models/recommendation.dart';
+import '../../../core/services/notification_service.dart';
 import '../../shared/widgets/async_value_view.dart';
 import '../controllers/home_controller.dart';
 
 class HomeView extends GetView<HomeController> {
   const HomeView({super.key});
+
+  void _showNotificationSettings(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => const NotificationSettingsSheet(),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -16,10 +30,12 @@ class HomeView extends GetView<HomeController> {
       appBar: AppBar(
         title: const Text('오늘 뭐 입음?'),
         actions: [
-          IconButton(
-            onPressed: controller.fetchRecommendation,
-            icon: const Icon(Icons.refresh),
-            tooltip: '새로고침',
+          Builder(
+            builder: (context) => IconButton(
+              onPressed: () => _showNotificationSettings(context),
+              icon: const Icon(Icons.notifications_outlined),
+              tooltip: '알림 설정',
+            ),
           ),
         ],
       ),
@@ -251,6 +267,217 @@ class _RecommendationTile extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class NotificationSettingsSheet extends StatefulWidget {
+  const NotificationSettingsSheet({super.key});
+
+  @override
+  State<NotificationSettingsSheet> createState() =>
+      _NotificationSettingsSheetState();
+}
+
+class _NotificationSettingsSheetState extends State<NotificationSettingsSheet> {
+  final _notificationService = NotificationService();
+  bool _isEnabled = false;
+  TimeOfDay _selectedTime = const TimeOfDay(hour: 8, minute: 0);
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSettings();
+  }
+
+  Future<void> _loadSettings() async {
+    final settings = await _notificationService.loadSettings();
+    setState(() {
+      _isEnabled = settings.isEnabled;
+      _selectedTime = settings.notificationTime;
+      _isLoading = false;
+    });
+  }
+
+  Future<void> _saveSettings() async {
+    final settings = NotificationSettings(
+      isEnabled: _isEnabled,
+      notificationTime: _selectedTime,
+    );
+    await _notificationService.saveSettings(settings);
+    if (mounted) {
+      Navigator.pop(context);
+    }
+  }
+
+  void _selectTime() {
+    BottomPicker.time(
+      pickerTitle: Text(
+        '알림 시간 선택',
+        style: TextStyle(
+          fontSize: 18,
+          fontWeight: FontWeight.bold,
+          color: AppColors.primary,
+        ),
+      ),
+      initialTime: Time(
+        hours: _selectedTime.hour,
+        minutes: _selectedTime.minute,
+      ),
+      use24hFormat: true,
+      onSubmit: (index) {
+        final Time time = index as Time;
+        setState(() {
+          _selectedTime = TimeOfDay(hour: time.hours, minute: time.minutes);
+        });
+      },
+      buttonSingleColor: AppColors.primary,
+      backgroundColor: Colors.white,
+    ).show(context);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: EdgeInsets.only(
+        left: 24,
+        right: 24,
+        top: 24,
+        bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                '알림 설정',
+                style: theme.textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              IconButton(
+                onPressed: () => Navigator.pop(context),
+                icon: const Icon(Icons.close),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '날씨 알림',
+                      style: theme.textTheme.titleMedium,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '매일 설정한 시간에 날씨와 추천 착장을 알려드립니다',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Switch(
+                value: _isEnabled,
+                onChanged: (value) {
+                  setState(() {
+                    _isEnabled = value;
+                  });
+                },
+                activeColor: AppColors.primary,
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          Text(
+            '알림 시간',
+            style: theme.textTheme.titleMedium?.copyWith(
+              color: _isEnabled ? null : Colors.grey[400],
+            ),
+          ),
+          const SizedBox(height: 12),
+          Opacity(
+            opacity: _isEnabled ? 1.0 : 0.5,
+            child: InkWell(
+              onTap: _isEnabled ? _selectTime : null,
+              borderRadius: BorderRadius.circular(12),
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 16,
+                ),
+                decoration: BoxDecoration(
+                  border: Border.all(
+                    color: _isEnabled ? Colors.grey[300]! : Colors.grey[200]!,
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                  color: _isEnabled ? null : Colors.grey[50],
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.access_time,
+                          color: _isEnabled ? AppColors.primary : Colors.grey[400],
+                        ),
+                        const SizedBox(width: 12),
+                        Text(
+                          _selectedTime.format(context),
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            color: _isEnabled ? null : Colors.grey[400],
+                          ),
+                        ),
+                      ],
+                    ),
+                    Icon(
+                      Icons.arrow_forward_ios,
+                      size: 16,
+                      color: _isEnabled ? Colors.grey[400] : Colors.grey[300],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 32),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: _saveSettings,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.accent,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: const Text(
+                '저장',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

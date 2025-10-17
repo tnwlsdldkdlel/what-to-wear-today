@@ -32,4 +32,18 @@ class LocationService {
     }
     return [locality, subLocality].where((value) => value.isNotEmpty).join(' ');
   }
+
+  /// 시 단위 지역명을 가져옵니다 (예: '서울특별시', '부산광역시')
+  Future<String> getCityName(Position position) async {
+    final placemarks = await placemarkFromCoordinates(position.latitude, position.longitude);
+    if (placemarks.isEmpty) {
+      return '알 수 없음';
+    }
+    final placemark = placemarks.first;
+    final locality = placemark.locality ?? placemark.administrativeArea ?? '';
+    if (locality.isEmpty) {
+      return '알 수 없음';
+    }
+    return locality;
+  }
 }

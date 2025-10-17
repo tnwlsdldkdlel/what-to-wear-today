@@ -7,6 +7,7 @@ import 'package:what_to_wear_today/app/app.dart';
 import 'package:what_to_wear_today/core/models/outfit_submission.dart';
 import 'package:what_to_wear_today/core/models/recommendation.dart';
 import 'package:what_to_wear_today/core/services/auth_service.dart';
+import 'package:what_to_wear_today/core/services/device_service.dart';
 import 'package:what_to_wear_today/core/services/location_service.dart';
 import 'package:what_to_wear_today/core/services/recommendation_service.dart';
 import 'package:what_to_wear_today/core/services/supabase_service.dart';
@@ -49,10 +50,12 @@ void main() {
     Get.put<RecommendationService>(_FakeRecommendationService());
     Get.put<AuthService>(_FakeAuthService());
     Get.put<SupabaseService>(_FakeSupabaseService());
+    Get.put<DeviceService>(_FakeDeviceService());
     Get.put<SubmissionController>(SubmissionController(
       authService: Get.find<AuthService>(),
       supabaseService: Get.find<SupabaseService>(),
       locationService: Get.find<LocationService>(),
+      deviceService: Get.find<DeviceService>(),
     ));
     Get.put<HomeController>(HomeController(
       locationService: Get.find<LocationService>(),
@@ -70,10 +73,12 @@ void main() {
     Get.put<RecommendationService>(_FakeRecommendationService());
     Get.put<AuthService>(_FakeAuthService());
     Get.put<SupabaseService>(_FakeSupabaseService());
+    Get.put<DeviceService>(_FakeDeviceService());
     Get.put<SubmissionController>(SubmissionController(
       authService: Get.find<AuthService>(),
       supabaseService: Get.find<SupabaseService>(),
       locationService: Get.find<LocationService>(),
+      deviceService: Get.find<DeviceService>(),
     ));
     Get.put<HomeController>(HomeController(
       locationService: Get.find<LocationService>(),
@@ -135,6 +140,9 @@ class _FakeLocationService extends LocationService {
 
   @override
   Future<String> resolvePlacemark(Position position) async => '서울 강남구';
+
+  @override
+  Future<String> getCityName(Position position) async => '서울특별시';
 }
 
 class _FakeRecommendationService extends RecommendationService {
@@ -168,4 +176,9 @@ class _FakeAuthService extends AuthService {
 class _FakeSupabaseService extends SupabaseService {
   @override
   Future<void> submitOutfit(OutfitSubmission submission) async {}
+}
+
+class _FakeDeviceService extends DeviceService {
+  @override
+  Future<String> getDeviceId() async => 'test-device-id';
 }

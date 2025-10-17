@@ -1,5 +1,7 @@
 class OutfitSubmission {
   const OutfitSubmission({
+    required this.deviceId,
+    required this.cityName,
     required this.latitude,
     required this.longitude,
     required this.top,
@@ -7,11 +9,11 @@ class OutfitSubmission {
     this.outerwear,
     required this.shoes,
     this.accessories,
-    required this.comfort,
     required this.reportedAt,
-    this.userId,
   });
 
+  final String deviceId;
+  final String cityName;
   final double latitude;
   final double longitude;
   final String top;
@@ -19,11 +21,11 @@ class OutfitSubmission {
   final String? outerwear;
   final String shoes;
   final List<String>? accessories;
-  final ComfortLevel comfort;
   final DateTime reportedAt;
-  final String? userId;
 
   Map<String, dynamic> toJson() => {
+        'device_id': deviceId,
+        'city_name': cityName,
         'latitude': latitude,
         'longitude': longitude,
         'top': top,
@@ -31,11 +33,6 @@ class OutfitSubmission {
         'outerwear': outerwear,
         'shoes': shoes,
         'accessories': accessories,
-        'comfort': comfort.name,
         'reported_at': reportedAt.toIso8601String(),
-        'is_just_right': comfort == ComfortLevel.justRight,
-        if (userId != null) 'user_id': userId,
       };
 }
-
-enum ComfortLevel { hot, justRight, cold }

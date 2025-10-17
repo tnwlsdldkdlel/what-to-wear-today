@@ -9,7 +9,6 @@ create table if not exists public.outfit_submissions (
   outerwear text,
   shoes text not null,
   accessories text[],
-  comfort text not null check (comfort in ('hot', 'justRight', 'cold')),
   reported_at timestamptz not null default timezone('utc', now()),
   is_just_right boolean not null default false
 );

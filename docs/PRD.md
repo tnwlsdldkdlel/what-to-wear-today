@@ -13,17 +13,16 @@
 
 ### 2.1 User Data Contribution (The "What I Wore" Submission)
 
-- **Goal:** Collect real-time, hyper-local clothing data and comfort feedback.
+- **Goal:** Collect real-time, hyper-local clothing data.
 - **Data Fields to Collect:**
   - **Location:** GPS-based geographic area (e.g., Gu/District).
   - **Worn Items:** Categorical selection (Tops, Bottoms, Outerwear, Shoes, Accessories).
-  - **Comfort Level:** **Hot, Just Right, Cold**.
 - **Design Requirement:** Selection UI must utilize **cute emoji icons** alongside text for each item to enhance visual appeal and submission speed.
 
 ### 2.2 Data Processing Logic
 
-- **Core Recommendation Algorithm:** The recommendation is based on a real-time, hyper-local consensus of comfort.
-- **Filtering:** Only data points where the user reported the **Comfort Level as 'Just Right'** will be utilized for generating the recommendation.
+- **Core Recommendation Algorithm:** The recommendation is based on real-time, hyper-local clothing data aggregation.
+- **Filtering:** All submitted data points in the local area will be utilized for generating the recommendation.
 - **Output:** The recommendation (Local Outfit Summary) will be the set of the **most frequently chosen** items, presented with their calculated **probability**.
 
 ## 3. User Interface (UI) and Experience (UX) - MVP Scope
@@ -32,7 +31,7 @@
 
 - **Key Elements (Top-Down Priority):**
   1.  **Current Weather & Temperature:** Display of the current temperature and an associated weather icon.
-  2.  **Local Outfit Summary (Core Recommendation):** A clear, concise sentence summarizing the most frequently worn items from 'Just Right' submissions in the current area.
+  2.  **Local Outfit Summary (Core Recommendation):** A clear, concise sentence summarizing the most frequently worn items from submissions in the current area.
   3.  **Location Display:** Shows the user's **current location (GPS-based)**.
 
 ### 3.2 Onboarding Flow
@@ -72,11 +71,11 @@ This is the primary API for retrieving the hyper-local, data-driven clothing rec
 
 ## 7. Minimum Viable Product (MVP) Scope
 
-| Status  | Feature                             | Notes                                                |
-| :------ | :---------------------------------- | :--------------------------------------------------- |
-| **IN**  | **Current Location Recommendation** | Core feature using GPS data only.                    |
-| **IN**  | **User Data Input**                 | Selection-based input with Comfort Level and Emojis. |
-| **IN**  | **Current Weather Display**         | Real-time weather and temperature data integration.  |
-| **OUT** | Manual Location Search/Change       | Deferred to V1.1.                                    |
-| **OUT** | Hourly Weather Forecast             | Deferred to V1.1.                                    |
-| **OUT** | Gamification/Rewards                | Deferred, focus is on intrinsic value.               |
+| Status  | Feature                             | Notes                                               |
+| :------ | :---------------------------------- | :-------------------------------------------------- |
+| **IN**  | **Current Location Recommendation** | Core feature using GPS data only.                   |
+| **IN**  | **User Data Input**                 | Selection-based input with Emojis.                  |
+| **IN**  | **Current Weather Display**         | Real-time weather and temperature data integration. |
+| **OUT** | Manual Location Search/Change       | Deferred to V1.1.                                   |
+| **OUT** | Hourly Weather Forecast             | Deferred to V1.1.                                   |
+| **OUT** | Gamification/Rewards                | Deferred, focus is on intrinsic value.              |

@@ -5,6 +5,7 @@ import 'package:geolocator/geolocator.dart';
 import '../../../app/routes/app_routes.dart';
 import '../../../core/models/outfit_submission.dart';
 import '../../../core/services/auth_service.dart';
+import '../../../core/services/device_service.dart';
 import '../../../core/services/location_service.dart';
 import '../../../core/services/supabase_service.dart';
 
@@ -20,20 +21,22 @@ class SubmissionController extends GetxController {
     required AuthService authService,
     required SupabaseService supabaseService,
     required LocationService locationService,
+    required DeviceService deviceService,
   })  : _authService = authService,
         _supabaseService = supabaseService,
-        _locationService = locationService;
+        _locationService = locationService,
+        _deviceService = deviceService;
 
   final AuthService _authService;
   final SupabaseService _supabaseService;
   final LocationService _locationService;
+  final DeviceService _deviceService;
 
   final RxString selectedTop = ''.obs;
   final RxString selectedBottom = ''.obs;
   final RxString selectedOuter = ''.obs;
   final RxString selectedShoes = ''.obs;
   final RxList<String> selectedAccessories = <String>[].obs;
-  final Rx<ComfortLevel?> selectedComfort = Rx<ComfortLevel?>(null);
   final RxBool isSubmitting = false.obs;
   final RxString submitMessage = ''.obs;
 
@@ -162,9 +165,14 @@ class SubmissionController extends GetxController {
     isSubmitting.value = true;
     submitMessage.value = '';
     try {
-      await _authService.ensureSession();
       final position = await _locationService.getCurrentPosition();
-      final submission = _buildSubmission(position);
+      final deviceId = await _deviceService.getDeviceId();
+      final cityName = await _locationService.getCityName(position);
+      final submission = _buildSubmission(
+        position: position,
+        deviceId: deviceId,
+        cityName: cityName,
+      );
       await _supabaseService.submitOutfit(submission);
       submitMessage.value = '제출이 완료되었습니다!';
       _resetForm();
@@ -182,8 +190,14 @@ class SubmissionController extends GetxController {
       selectedBottom.value.isNotEmpty &&
       selectedShoes.value.isNotEmpty;
 
-  OutfitSubmission _buildSubmission(Position position) {
+  OutfitSubmission _buildSubmission({
+    required Position position,
+    required String deviceId,
+    required String cityName,
+  }) {
     return OutfitSubmission(
+      deviceId: deviceId,
+      cityName: cityName,
       latitude: position.latitude,
       longitude: position.longitude,
       top: selectedTop.value,
@@ -192,9 +206,7 @@ class SubmissionController extends GetxController {
       shoes: selectedShoes.value,
       accessories:
           selectedAccessories.isEmpty ? null : selectedAccessories.toList(),
-      comfort: selectedComfort.value ?? ComfortLevel.justRight,
       reportedAt: DateTime.now(),
-      userId: _authService.currentUserId,
     );
   }
 
@@ -204,7 +216,6 @@ class SubmissionController extends GetxController {
     selectedOuter.value = '';
     selectedShoes.value = '';
     selectedAccessories.clear();
-    selectedComfort.value = null;
     submitMessage.value = '';
   }
 
