@@ -23,6 +23,44 @@ SVG 기반의 직관적인 카드 UI로 빠르게 의상을 입력할 수 있습
 - 익명 인증으로 간편한 사용자 경험 제공
 - Row-Level Security 정책으로 사용자 데이터 보호
 
+### 알림 설정
+
+**로컬 알림 기반 구현**
+
+매일 지정한 시간에 날씨와 추천 착장을 알려주는 로컬 푸시 알림을 제공합니다.
+
+**왜 로컬 알림을 선택했나요?**
+- **간편함**: FCM/APNS 같은 원격 푸시 서비스 설정이 불필요
+- **비용 절감**: 외부 푸시 서비스 인프라 불필요
+- **개인정보 보호**: 푸시 토큰을 외부 서버에 전송할 필요 없음
+- **충분한 기능**: 매일 정해진 시간에 알림을 보내는 단순한 요구사항에 적합
+
+**핵심 설계 결정**
+
+1. **device_id를 primary identifier로 사용**
+   - 익명 인증 방식이므로 user_id가 불안정할 수 있음
+   - 기기별로 고유한 알림 설정 관리 가능
+   - device_tokens 테이블에서 `device_id` 컬럼이 unique NOT NULL로 설정됨
+
+2. **Supabase를 단일 진실 소스(Single Source of Truth)로 사용**
+   - 알림 설정은 Supabase `device_tokens` 테이블에 저장
+   - SharedPreferences는 로컬 캐싱 용도로만 사용
+   - `loadSettings()` 시 Supabase 우선 조회 → 없으면 기본값(off) 반환
+
+3. **데이터 흐름**
+   ```
+   사용자 설정 변경
+   → NotificationService.saveSettings()
+   → Supabase device_tokens 테이블 upsert (onConflict: device_id)
+   → SharedPreferences 동기화
+   → flutter_local_notifications로 스케줄링
+   ```
+
+**기술 스택**
+- `flutter_local_notifications` - 로컬 푸시 알림 스케줄링
+- `timezone` - 한국 시간대(Asia/Seoul) 기반 스케줄링
+- Supabase `device_tokens` 테이블 - 알림 설정 영구 저장
+
 ## 기술 스택
 
 - **Flutter 3** + GetX 상태관리 (MVC 패턴)
