@@ -192,6 +192,16 @@ Currently minimal test coverage (only default widget_test.dart). When adding tes
 
 - **Language**: Commit messages should be written in Korean (title and body), while keeping the type prefix in English
 - **Format**: `<type>: <Korean description>`
+- **Granular Commits**: Always commit each feature or change separately, even when working on related tasks
+  - **Separate by concern**: UI changes, business logic, tests, and documentation should be in separate commits
+  - **One logical change per commit**: Each commit should represent a single, complete, and atomic change
+  - **Examples of granular commits**:
+    - ❌ Bad: `feat: 프로필 기능 추가` (UI + API + validation all together)
+    - ✅ Good:
+      1. `feat: 프로필 데이터 모델 추가`
+      2. `feat: 프로필 API 서비스 구현`
+      3. `feat: 프로필 화면 UI 구현`
+      4. `test: 프로필 서비스 단위 테스트 추가`
 - **Examples**:
   - `feat: 사용자 프로필 화면 추가`
   - `fix: 로그인 오류 해결`
