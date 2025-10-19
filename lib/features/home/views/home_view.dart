@@ -1,4 +1,3 @@
-import 'package:bottom_picker/bottom_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -17,6 +16,7 @@ class HomeView extends GetView<HomeController> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -284,6 +284,8 @@ class _NotificationSettingsSheetState extends State<NotificationSettingsSheet> {
   final _notificationService = NotificationService();
   bool _isEnabled = false;
   TimeOfDay _selectedTime = const TimeOfDay(hour: 8, minute: 0);
+  FixedExtentScrollController? _hourController;
+  FixedExtentScrollController? _minuteController;
   bool _isLoading = true;
 
   @override
@@ -294,54 +296,80 @@ class _NotificationSettingsSheetState extends State<NotificationSettingsSheet> {
 
   Future<void> _loadSettings() async {
     final settings = await _notificationService.loadSettings();
-    setState(() {
-      _isEnabled = settings.isEnabled;
-      _selectedTime = settings.notificationTime;
-      _isLoading = false;
-    });
+    if (mounted) {
+      setState(() {
+        _isEnabled = settings.isEnabled;
+        _selectedTime = settings.notificationTime;
+        _hourController = FixedExtentScrollController(
+          initialItem: settings.notificationTime.hour,
+        );
+        _minuteController = FixedExtentScrollController(
+          initialItem: settings.notificationTime.minute,
+        );
+        _isLoading = false;
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _hourController?.dispose();
+    _minuteController?.dispose();
+    super.dispose();
   }
 
   Future<void> _saveSettings() async {
+    // 알림이 활성화되는 경우 권한 요청
+    if (_isEnabled) {
+      final granted = await _notificationService.requestPermission();
+      if (!granted) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('알림 권한이 필요합니다. 설정에서 권한을 허용해주세요.'),
+            ),
+          );
+        }
+        return;
+      }
+    }
+
     final settings = NotificationSettings(
       isEnabled: _isEnabled,
       notificationTime: _selectedTime,
     );
     await _notificationService.saveSettings(settings);
+
     if (mounted) {
       Navigator.pop(context);
-    }
-  }
-
-  void _selectTime() {
-    BottomPicker.time(
-      pickerTitle: Text(
-        '알림 시간 선택',
-        style: TextStyle(
-          fontSize: 18,
-          fontWeight: FontWeight.bold,
-          color: AppColors.primary,
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            _isEnabled
+                ? '알림이 설정되었습니다. 매일 ${_selectedTime.format(context)}에 알림을 받으실 수 있습니다.'
+                : '알림이 해제되었습니다.',
+          ),
         ),
-      ),
-      initialTime: Time(
-        hours: _selectedTime.hour,
-        minutes: _selectedTime.minute,
-      ),
-      use24hFormat: true,
-      onSubmit: (index) {
-        final Time time = index as Time;
-        setState(() {
-          _selectedTime = TimeOfDay(hour: time.hours, minute: time.minutes);
-        });
-      },
-      buttonSingleColor: AppColors.primary,
-      backgroundColor: Colors.white,
-    ).show(context);
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+
+    if (_isLoading) {
+      return Container(
+        height: MediaQuery.of(context).size.height * 0.7,
+        padding: const EdgeInsets.all(24),
+        child: const Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
     return Container(
+      height: MediaQuery.of(context).size.height * 0.7,
       padding: EdgeInsets.only(
         left: 24,
         right: 24,
@@ -349,7 +377,6 @@ class _NotificationSettingsSheetState extends State<NotificationSettingsSheet> {
         bottom: MediaQuery.of(context).viewInsets.bottom + 24,
       ),
       child: Column(
-        mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
@@ -398,70 +425,129 @@ class _NotificationSettingsSheetState extends State<NotificationSettingsSheet> {
                     _isEnabled = value;
                   });
                 },
-                activeColor: AppColors.primary,
+                activeTrackColor: AppColors.primary,
               ),
             ],
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 32),
           Text(
             '알림 시간',
             style: theme.textTheme.titleMedium?.copyWith(
               color: _isEnabled ? null : Colors.grey[400],
             ),
           ),
-          const SizedBox(height: 12),
-          Opacity(
-            opacity: _isEnabled ? 1.0 : 0.5,
-            child: InkWell(
-              onTap: _isEnabled ? _selectTime : null,
-              borderRadius: BorderRadius.circular(12),
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 16,
-                ),
-                decoration: BoxDecoration(
-                  border: Border.all(
-                    color: _isEnabled ? Colors.grey[300]! : Colors.grey[200]!,
+          const SizedBox(height: 16),
+          Expanded(
+            child: Opacity(
+              opacity: _isEnabled ? 1.0 : 0.5,
+              child: IgnorePointer(
+                ignoring: !_isEnabled,
+                child: Container(
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                      color: _isEnabled ? Colors.grey[300]! : Colors.grey[200]!,
+                    ),
+                    borderRadius: BorderRadius.circular(12),
+                    color: _isEnabled ? Colors.white : Colors.grey[50],
                   ),
-                  borderRadius: BorderRadius.circular(12),
-                  color: _isEnabled ? null : Colors.grey[50],
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.access_time,
-                          color: _isEnabled ? AppColors.primary : Colors.grey[400],
-                        ),
-                        const SizedBox(width: 12),
-                        Text(
-                          _selectedTime.format(context),
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            color: _isEnabled ? null : Colors.grey[400],
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Expanded(
+                        child: ListWheelScrollView.useDelegate(
+                          controller: _hourController!,
+                          itemExtent: 50,
+                          perspective: 0.005,
+                          diameterRatio: 1.2,
+                          physics: const FixedExtentScrollPhysics(),
+                          onSelectedItemChanged: (index) {
+                            setState(() {
+                              _selectedTime = TimeOfDay(
+                                hour: index,
+                                minute: _selectedTime.minute,
+                              );
+                            });
+                          },
+                          childDelegate: ListWheelChildBuilderDelegate(
+                            childCount: 24,
+                            builder: (context, index) {
+                              final isSelected = index == _selectedTime.hour;
+                              return Center(
+                                child: Text(
+                                  index.toString().padLeft(2, '0'),
+                                  style: TextStyle(
+                                    fontSize: isSelected ? 28 : 20,
+                                    fontWeight: isSelected
+                                        ? FontWeight.bold
+                                        : FontWeight.normal,
+                                    color: isSelected
+                                        ? AppColors.primary
+                                        : Colors.grey[400],
+                                  ),
+                                ),
+                              );
+                            },
                           ),
                         ),
-                      ],
-                    ),
-                    Icon(
-                      Icons.arrow_forward_ios,
-                      size: 16,
-                      color: _isEnabled ? Colors.grey[400] : Colors.grey[300],
-                    ),
-                  ],
+                      ),
+                      const Text(
+                        ':',
+                        style: TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                      Expanded(
+                        child: ListWheelScrollView.useDelegate(
+                          controller: _minuteController!,
+                          itemExtent: 50,
+                          perspective: 0.005,
+                          diameterRatio: 1.2,
+                          physics: const FixedExtentScrollPhysics(),
+                          onSelectedItemChanged: (index) {
+                            setState(() {
+                              _selectedTime = TimeOfDay(
+                                hour: _selectedTime.hour,
+                                minute: index,
+                              );
+                            });
+                          },
+                          childDelegate: ListWheelChildBuilderDelegate(
+                            childCount: 60,
+                            builder: (context, index) {
+                              final isSelected = index == _selectedTime.minute;
+                              return Center(
+                                child: Text(
+                                  index.toString().padLeft(2, '0'),
+                                  style: TextStyle(
+                                    fontSize: isSelected ? 28 : 20,
+                                    fontWeight: isSelected
+                                        ? FontWeight.bold
+                                        : FontWeight.normal,
+                                    color: isSelected
+                                        ? AppColors.primary
+                                        : Colors.grey[400],
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
           ),
-          const SizedBox(height: 32),
+          const SizedBox(height: 24),
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
               onPressed: _saveSettings,
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.accent,
+                backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(

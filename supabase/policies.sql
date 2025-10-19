@@ -29,3 +29,40 @@ create policy "Users read aggregated data"
 
 -- Enable realtime broadcasts for live updates (optional)
 alter publication supabase_realtime add table public.outfit_submissions;
+
+-- Device tokens table for local notifications
+create table if not exists public.device_tokens (
+  id uuid primary key default gen_random_uuid(),
+  device_id text unique not null,
+  is_enabled boolean not null default false,
+  notification_hour int not null default 8,
+  notification_minute int not null default 0,
+  platform text,
+  is_active boolean not null default true,
+  created_at timestamptz not null default timezone('utc', now()),
+  updated_at timestamptz not null default timezone('utc', now())
+);
+
+alter table public.device_tokens enable row level security;
+
+drop policy if exists "Users can manage their device tokens" on public.device_tokens;
+create policy "Users can manage their device tokens"
+  on public.device_tokens
+  for all
+  using (true)
+  with check (true);
+
+-- Auto-update updated_at timestamp
+create or replace function public.update_updated_at_column()
+returns trigger as $$
+begin
+  new.updated_at = timezone('utc', now());
+  return new;
+end;
+$$ language plpgsql;
+
+drop trigger if exists update_device_tokens_updated_at on public.device_tokens;
+create trigger update_device_tokens_updated_at
+  before update on public.device_tokens
+  for each row
+  execute function public.update_updated_at_column();

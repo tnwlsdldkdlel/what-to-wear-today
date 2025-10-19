@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'app/app.dart';
 import 'core/config/environment.dart';
+import 'core/services/notification_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -19,6 +20,10 @@ Future<void> main() async {
 
   final env = AppEnvironment();
   await Supabase.initialize(url: env.supabaseUrl, anonKey: env.supabaseAnonKey);
+
+  // 알림 서비스 초기화
+  final notificationService = NotificationService();
+  await notificationService.initialize();
 
   runApp(const OutfitApp());
 }
