@@ -133,8 +133,14 @@ class SubmissionController extends GetxController {
   Future<bool> confirmCancel() async {
     final result = await Get.dialog<bool>(
           AlertDialog(
-            title: const Text('등록을 취소하겠어요?'),
-            content: const Text('지금까지 선택한 내용이 모두 사라집니다.'),
+            title: const Text(
+              '등록을 취소하겠어요?',
+              textAlign: TextAlign.center,
+            ),
+            content: const Text(
+              '지금까지 선택한 내용이 모두 사라집니다.',
+              textAlign: TextAlign.center,
+            ),
             actions: [
               TextButton(
                 onPressed: () => Get.back(result: true),
