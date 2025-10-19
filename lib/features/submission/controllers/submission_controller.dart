@@ -130,7 +130,6 @@ class SubmissionController extends GetxController {
     Get.toNamed(AppRoutes.submissionReview);
   }
 
-
   Future<bool> confirmCancel() async {
     final result = await Get.dialog<bool>(
           AlertDialog(
@@ -138,12 +137,12 @@ class SubmissionController extends GetxController {
             content: const Text('지금까지 선택한 내용이 모두 사라집니다.'),
             actions: [
               TextButton(
-                onPressed: () => Get.back(result: false),
-                child: const Text('계속 작성'),
-              ),
-              FilledButton(
                 onPressed: () => Get.back(result: true),
                 child: const Text('취소'),
+              ),
+              FilledButton(
+                onPressed: () => Get.back(result: false),
+                child: const Text('계속 작성'),
               ),
             ],
           ),
@@ -248,7 +247,6 @@ class SubmissionController extends GetxController {
       : shoes.firstWhere((item) => item.label == selectedShoes.value);
 
   List<ClothingOption> get selectedAccessoriesOptions => selectedAccessories
-      .map((label) =>
-          accessories.firstWhere((item) => item.label == label))
+      .map((label) => accessories.firstWhere((item) => item.label == label))
       .toList();
 }
