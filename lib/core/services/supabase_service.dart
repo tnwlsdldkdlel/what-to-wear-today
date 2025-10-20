@@ -60,7 +60,7 @@ class SupabaseService {
   /// 특정 지역의 오늘 인기 착장 조회
   ///
   /// [cityName]: 지역명 (예: '서울특별시', '부산광역시')
-  /// 오늘 새벽 0시 이후 제출된 데이터 중 가장 많이 입은 상의+하의 조합을 반환
+  /// 오늘 새벽 0시 이후 제출된 데이터 중 가장 많이 입은 상의+하의+아우터 조합을 반환
   Future<PopularOutfit?> getPopularOutfit(String cityName) async {
     try {
       // 오늘 새벽 0시 계산
@@ -70,7 +70,7 @@ class SupabaseService {
       // 오늘 제출된 해당 지역의 데이터 조회
       final response = await _client
           .from('outfit_submissions')
-          .select('top, bottom, city_name')
+          .select('top, bottom, outerwear, city_name')
           .eq('city_name', cityName)
           .gte('reported_at', todayStart.toIso8601String());
 
@@ -80,14 +80,27 @@ class SupabaseService {
         return null;
       }
 
-      // 클라이언트 측에서 상의+하의 조합별로 집계
-      final Map<String, int> combinationCounts = {};
+      // 클라이언트 측에서 상의+하의+아우터 조합별로 집계
+      final Map<String, Map<String, dynamic>> combinationCounts = {};
 
       for (final submission in submissions) {
         final top = submission['top'] as String;
         final bottom = submission['bottom'] as String;
-        final key = '$top|$bottom';
-        combinationCounts[key] = (combinationCounts[key] ?? 0) + 1;
+        final outerwear = submission['outerwear'] as String?;
+
+        // 아우터를 포함한 조합 키 생성 (null이면 빈 문자열)
+        final key = '$top|$bottom|${outerwear ?? ""}';
+
+        if (combinationCounts.containsKey(key)) {
+          combinationCounts[key]!['count'] += 1;
+        } else {
+          combinationCounts[key] = {
+            'top': top,
+            'bottom': bottom,
+            'outerwear': outerwear,
+            'count': 1,
+          };
+        }
       }
 
       if (combinationCounts.isEmpty) {
@@ -95,14 +108,18 @@ class SupabaseService {
       }
 
       // 가장 많이 입은 조합 찾기
-      final mostPopular = combinationCounts.entries
-          .reduce((a, b) => a.value > b.value ? a : b);
+      var mostPopular = combinationCounts.values.first;
+      for (final combo in combinationCounts.values) {
+        if (combo['count'] > mostPopular['count']) {
+          mostPopular = combo;
+        }
+      }
 
-      final parts = mostPopular.key.split('|');
       return PopularOutfit(
-        top: parts[0],
-        bottom: parts[1],
-        count: mostPopular.value,
+        top: mostPopular['top'] as String,
+        bottom: mostPopular['bottom'] as String,
+        outerwear: mostPopular['outerwear'] as String?,
+        count: mostPopular['count'] as int,
         cityName: cityName,
       );
     } on PostgrestException catch (error) {
