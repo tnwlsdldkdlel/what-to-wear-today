@@ -114,6 +114,9 @@ class HomeContent extends GetView<HomeController> {
         const SizedBox(height: 16),
         Obx(() {
           final popular = controller.popularOutfit.value;
+          final areaLabel = controller.areaLabel.value;
+
+          // 데이터가 있는 경우 인기 착장 표시
           if (popular != null) {
             return Container(
               padding: const EdgeInsets.all(16),
@@ -146,7 +149,38 @@ class HomeContent extends GetView<HomeController> {
               ),
             );
           }
-          return const SizedBox.shrink();
+
+          // 데이터가 없는 경우 대체 메시지 표시
+          return Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withOpacity(0.05),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: AppColors.primary.withOpacity(0.2),
+                width: 1,
+              ),
+            ),
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.info_outline,
+                  color: AppColors.primary,
+                  size: 24,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    '아직 $areaLabel 오늘의 착장 데이터가 없어요! 😉 첫 트렌드를 만들어 주세요.',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w500,
+                      color: Colors.black87,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
         }),
         const SizedBox(height: 24),
         Text(
