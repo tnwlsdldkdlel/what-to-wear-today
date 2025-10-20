@@ -96,7 +96,7 @@ class HomeView extends GetView<HomeController> {
   }
 }
 
-class HomeContent extends StatelessWidget {
+class HomeContent extends GetView<HomeController> {
   const HomeContent({
     super.key,
     required this.recommendation,
@@ -111,6 +111,43 @@ class HomeContent extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         _HeroWeatherCard(recommendation: recommendation),
+        const SizedBox(height: 16),
+        Obx(() {
+          final popular = controller.popularOutfit.value;
+          if (popular != null) {
+            return Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: AppColors.justRight.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: AppColors.justRight.withOpacity(0.3),
+                  width: 1,
+                ),
+              ),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.local_fire_department,
+                    color: AppColors.accent,
+                    size: 24,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      popular.buildRecommendationMessage(),
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black87,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }
+          return const SizedBox.shrink();
+        }),
         const SizedBox(height: 24),
         Text(
           recommendation.buildSummarySentence(),
