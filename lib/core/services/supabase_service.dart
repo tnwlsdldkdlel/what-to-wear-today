@@ -60,7 +60,7 @@ class SupabaseService {
   /// 특정 지역의 오늘 인기 착장 조회
   ///
   /// [cityName]: 지역명 (예: '서울특별시', '부산광역시')
-  /// 오늘 새벽 0시 이후 제출된 데이터 중 가장 많이 입은 상의+하의+아우터 조합을 반환
+  /// 오늘 새벽 0시 이후 제출된 데이터 중 가장 많이 입은 전체 착장 조합을 반환
   Future<PopularOutfit?> getPopularOutfit(String cityName) async {
     try {
       // 오늘 새벽 0시 계산
@@ -70,7 +70,7 @@ class SupabaseService {
       // 오늘 제출된 해당 지역의 데이터 조회
       final response = await _client
           .from('outfit_submissions')
-          .select('top, bottom, outerwear, city_name')
+          .select('top, bottom, outerwear, shoes, accessories, city_name')
           .eq('city_name', cityName)
           .gte('reported_at', todayStart.toIso8601String());
 
@@ -80,16 +80,24 @@ class SupabaseService {
         return null;
       }
 
-      // 클라이언트 측에서 상의+하의+아우터 조합별로 집계
+      // 클라이언트 측에서 전체 착장 조합별로 집계
       final Map<String, Map<String, dynamic>> combinationCounts = {};
 
       for (final submission in submissions) {
         final top = submission['top'] as String;
         final bottom = submission['bottom'] as String;
         final outerwear = submission['outerwear'] as String?;
+        final shoes = submission['shoes'] as String?;
+        final accessories = submission['accessories'] as List<dynamic>?;
 
-        // 아우터를 포함한 조합 키 생성 (null이면 빈 문자열)
-        final key = '$top|$bottom|${outerwear ?? ""}';
+        // 악세서리 정렬 (일관성 있는 키 생성을 위해)
+        final sortedAccessories = accessories != null
+            ? (List<String>.from(accessories)..sort()).join(',')
+            : '';
+
+        // 전체 조합 키 생성
+        final key =
+            '$top|$bottom|${outerwear ?? ""}|${shoes ?? ""}|$sortedAccessories';
 
         if (combinationCounts.containsKey(key)) {
           combinationCounts[key]!['count'] += 1;
@@ -98,6 +106,10 @@ class SupabaseService {
             'top': top,
             'bottom': bottom,
             'outerwear': outerwear,
+            'shoes': shoes,
+            'accessories': accessories != null
+                ? List<String>.from(accessories)
+                : null,
             'count': 1,
           };
         }
@@ -119,6 +131,8 @@ class SupabaseService {
         top: mostPopular['top'] as String,
         bottom: mostPopular['bottom'] as String,
         outerwear: mostPopular['outerwear'] as String?,
+        shoes: mostPopular['shoes'] as String?,
+        accessories: mostPopular['accessories'] as List<String>?,
         count: mostPopular['count'] as int,
         cityName: cityName,
       );
