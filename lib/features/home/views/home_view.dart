@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 
 import '../../../app/routes/app_routes.dart';
 import '../../../app/themes/app_theme.dart';
+import '../../../core/models/city_region.dart';
 import '../../../core/models/notification_settings.dart';
 import '../../../core/models/recommendation.dart';
 import '../../../core/services/notification_service.dart';
@@ -24,11 +25,35 @@ class HomeView extends GetView<HomeController> {
     );
   }
 
+  void _showLocationPicker(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => const LocationPickerSheet(),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('오늘 뭐 입음?'),
+        title: Obx(
+          () => GestureDetector(
+            onTap: () => _showLocationPicker(context),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(controller.areaLabel.value),
+                const SizedBox(width: 4),
+                const Icon(Icons.arrow_drop_down, size: 24),
+              ],
+            ),
+          ),
+        ),
         actions: [
           Builder(
             builder: (context) => IconButton(
@@ -56,8 +81,7 @@ class HomeView extends GetView<HomeController> {
             if (data == null) {
               return const AsyncEmptyView(message: '추천 데이터를 불러오지 못했습니다.');
             }
-            return HomeContent(
-                recommendation: data, area: controller.areaLabel.value);
+            return HomeContent(recommendation: data);
           }),
         ),
       ),
@@ -76,11 +100,9 @@ class HomeContent extends StatelessWidget {
   const HomeContent({
     super.key,
     required this.recommendation,
-    required this.area,
   });
 
   final Recommendation recommendation;
-  final String area;
 
   @override
   Widget build(BuildContext context) {
@@ -88,7 +110,7 @@ class HomeContent extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _HeroWeatherCard(recommendation: recommendation, area: area),
+        _HeroWeatherCard(recommendation: recommendation),
         const SizedBox(height: 24),
         Text(
           recommendation.buildSummarySentence(),
@@ -147,11 +169,9 @@ class HomeContent extends StatelessWidget {
 class _HeroWeatherCard extends StatelessWidget {
   const _HeroWeatherCard({
     required this.recommendation,
-    required this.area,
   });
 
   final Recommendation recommendation;
-  final String area;
 
   @override
   Widget build(BuildContext context) {
@@ -162,22 +182,11 @@ class _HeroWeatherCard extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                _WeatherIcon(code: recommendation.weatherIcon),
-                const SizedBox(width: 12),
-                Text(
-                  '${recommendation.temperature.toStringAsFixed(1)}°',
-                  style: theme.textTheme.headlineSmall?.copyWith(fontSize: 40),
-                ),
-              ],
-            ),
+            _WeatherIcon(code: recommendation.weatherIcon),
             const SizedBox(height: 12),
             Text(
-              area,
-              style: theme.textTheme.titleMedium,
-              textAlign: TextAlign.center,
+              '${recommendation.temperature.toStringAsFixed(1)}°',
+              style: theme.textTheme.headlineSmall?.copyWith(fontSize: 40),
             ),
           ],
         ),
@@ -194,34 +203,49 @@ class _WeatherIcon extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final icon = _mapToIcon(code);
-    return Container(
-      padding: const EdgeInsets.all(10),
-      decoration: BoxDecoration(
-        color: AppColors.primary.withOpacity(0.12),
-        shape: BoxShape.circle,
-      ),
-      child: Icon(icon, color: AppColors.primary, size: 32),
-    );
+    final color = _getColorForWeather(code);
+    return Icon(icon, color: color, size: 100);
   }
 
   IconData _mapToIcon(String code) {
     switch (code) {
       case 'sunny':
-        return Icons.wb_sunny_rounded;
+        return Icons.wb_sunny;
       case 'partly_cloudy':
-        return Icons.cloud_queue_rounded;
+        return Icons.cloud;
       case 'rain':
       case 'heavy_rain':
-        return Icons.grain_rounded;
+        return Icons.grain;
       case 'fog':
-        return Icons.blur_on_rounded;
+        return Icons.blur_on;
       case 'snow':
       case 'heavy_snow':
-        return Icons.ac_unit_rounded;
+        return Icons.ac_unit;
       case 'storm':
-        return Icons.flash_on_rounded;
+        return Icons.flash_on;
       default:
-        return Icons.wb_cloudy_rounded;
+        return Icons.wb_cloudy;
+    }
+  }
+
+  Color _getColorForWeather(String code) {
+    switch (code) {
+      case 'sunny':
+        return const Color(0xFFFFA726); // 오렌지 (맑음)
+      case 'partly_cloudy':
+        return const Color(0xFF90CAF9); // 하늘색 (구름 조금)
+      case 'rain':
+      case 'heavy_rain':
+        return const Color(0xFF42A5F5); // 파란색 (비)
+      case 'fog':
+        return const Color(0xFF9E9E9E); // 회색 (안개)
+      case 'snow':
+      case 'heavy_snow':
+        return const Color(0xFF81D4FA); // 연한 파란색 (눈)
+      case 'storm':
+        return const Color(0xFF5C6BC0); // 보라색 (폭풍)
+      default:
+        return const Color(0xFFBDBDBD); // 회색 (흐림)
     }
   }
 }
@@ -562,6 +586,143 @@ class _NotificationSettingsSheetState extends State<NotificationSettingsSheet> {
                 ),
               ),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class LocationPickerSheet extends StatefulWidget {
+  const LocationPickerSheet({super.key});
+
+  @override
+  State<LocationPickerSheet> createState() => _LocationPickerSheetState();
+}
+
+class _LocationPickerSheetState extends State<LocationPickerSheet> {
+  final TextEditingController _searchController = TextEditingController();
+  List<CityRegion> _filteredRegions = CityRegion.all;
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _onSearchChanged(String query) {
+    setState(() {
+      _filteredRegions = CityRegion.search(query);
+    });
+  }
+
+  void _onRegionSelected(CityRegion region) {
+    final controller = Get.find<HomeController>();
+    controller.selectRegion(region);
+    Navigator.pop(context);
+  }
+
+  void _onCurrentLocationSelected() {
+    final controller = Get.find<HomeController>();
+    controller.useCurrentLocation();
+    Navigator.pop(context);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Container(
+      height: MediaQuery.of(context).size.height * 0.7,
+      padding: EdgeInsets.only(
+        left: 24,
+        right: 24,
+        top: 24,
+        bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                '지역 선택',
+                style: theme.textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              IconButton(
+                onPressed: () => Navigator.pop(context),
+                icon: const Icon(Icons.close),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          TextField(
+            controller: _searchController,
+            onChanged: _onSearchChanged,
+            decoration: InputDecoration(
+              hintText: '시/도 검색',
+              prefixIcon: const Icon(Icons.search),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 12,
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          ListTile(
+            leading: const Icon(Icons.my_location, color: AppColors.primary),
+            title: const Text(
+              '현재 위치',
+              style: TextStyle(
+                fontWeight: FontWeight.w600,
+                color: AppColors.primary,
+              ),
+            ),
+            onTap: _onCurrentLocationSelected,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+            tileColor: AppColors.primary.withOpacity(0.05),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            '전체 지역',
+            style: theme.textTheme.titleSmall?.copyWith(
+              color: Colors.grey[600],
+            ),
+          ),
+          const SizedBox(height: 8),
+          Expanded(
+            child: _filteredRegions.isEmpty
+                ? Center(
+                    child: Text(
+                      '검색 결과가 없습니다',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                  )
+                : ListView.builder(
+                    itemCount: _filteredRegions.length,
+                    itemBuilder: (context, index) {
+                      final region = _filteredRegions[index];
+                      return ListTile(
+                        title: Text(region.name),
+                        onTap: () => _onRegionSelected(region),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      );
+                    },
+                  ),
           ),
         ],
       ),
