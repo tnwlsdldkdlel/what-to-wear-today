@@ -57,31 +57,93 @@ class SupabaseService {
     }
   }
 
+  /// 특정 지역과 온도 범위의 오늘 착장 데이터 조회
+  ///
+  /// [cityName]: 지역명 (예: '서울특별시', '부산광역시')
+  /// [temperature]: 현재 온도
+  /// [tempRange]: 온도 범위 (기본 ±5도)
+  /// 오늘 제출된 해당 지역의 유사 온도대 착장 데이터를 반환
+  Future<List<Map<String, dynamic>>> getOutfitsByTemperature({
+    required String cityName,
+    required double temperature,
+    double tempRange = 5.0,
+  }) async {
+    try {
+      // 최근 7일간의 데이터 조회 (오늘만 조회하면 데이터가 없을 수 있음)
+      final now = DateTime.now();
+      final weekAgo = now.subtract(const Duration(days: 7));
+
+      print('Fetching outfits for city: $cityName');
+
+      // city_name이 null이거나 빈 문자열이면 모든 데이터 조회
+      var query = _client
+          .from('outfit_submissions')
+          .select('top, bottom, outerwear, shoes, accessories, city_name')
+          .gte('reported_at', weekAgo.toIso8601String());
+
+      // city_name이 있으면 필터 추가
+      if (cityName.isNotEmpty) {
+        query = query.eq('city_name', cityName);
+      }
+
+      final response = await query;
+      final submissions = response as List<dynamic>;
+
+      print('Found ${submissions.length} outfit submissions');
+      if (submissions.isNotEmpty) {
+        print('Sample submission: ${submissions.first}');
+      }
+
+      return submissions.map((e) => e as Map<String, dynamic>).toList();
+    } on PostgrestException catch (error) {
+      print('Failed to get outfits by temperature: ${error.message}');
+      return [];
+    } catch (error) {
+      print('Unexpected error getting outfits: $error');
+      return [];
+    }
+  }
+
   /// 특정 지역의 오늘 인기 착장 조회
   ///
   /// [cityName]: 지역명 (예: '서울특별시', '부산광역시')
-  /// 오늘 새벽 0시 이후 제출된 데이터 중 가장 많이 입은 전체 착장 조합을 반환
+  /// 최근 7일간 제출된 데이터 중 가장 많이 입은 전체 착장 조합을 반환
   Future<PopularOutfit?> getPopularOutfit(String cityName) async {
     try {
-      // 오늘 새벽 0시 계산
+      // 최근 7일간의 데이터 조회
       final now = DateTime.now();
-      final todayStart = DateTime(now.year, now.month, now.day);
+      final weekAgo = now.subtract(const Duration(days: 7));
 
-      // 오늘 제출된 해당 지역의 데이터 조회
-      final response = await _client
+      print('Fetching popular outfit for city: $cityName');
+
+      // 해당 지역의 데이터 조회 (최신 데이터 우선을 위해 reported_at 포함)
+      var query = _client
           .from('outfit_submissions')
-          .select('top, bottom, outerwear, shoes, accessories, city_name')
-          .eq('city_name', cityName)
-          .gte('reported_at', todayStart.toIso8601String());
+          .select('top, bottom, outerwear, shoes, accessories, city_name, reported_at')
+          .gte('reported_at', weekAgo.toIso8601String());
+
+      // city_name이 있으면 필터 추가
+      if (cityName.isNotEmpty) {
+        query = query.eq('city_name', cityName);
+      }
+
+      final response = await query;
 
       final submissions = response as List<dynamic>;
 
+      print('Found ${submissions.length} submissions for popular outfit');
+
       if (submissions.isEmpty) {
+        print('No submissions found, returning null');
         return null;
       }
 
-      // 클라이언트 측에서 전체 착장 조합별로 집계
-      final Map<String, Map<String, dynamic>> combinationCounts = {};
+      // 각 카테고리별 아이템 빈도와 최신 타임스탬프 집계
+      final topCounts = <String, ({int count, DateTime latestTime})>{};
+      final bottomCounts = <String, ({int count, DateTime latestTime})>{};
+      final outerwearCounts = <String, ({int count, DateTime latestTime})>{};
+      final shoesCounts = <String, ({int count, DateTime latestTime})>{};
+      final accessoriesCounts = <String, ({int count, DateTime latestTime})>{};
 
       for (final submission in submissions) {
         final top = submission['top'] as String;
@@ -89,51 +151,139 @@ class SupabaseService {
         final outerwear = submission['outerwear'] as String?;
         final shoes = submission['shoes'] as String?;
         final accessories = submission['accessories'] as List<dynamic>?;
+        final reportedAt = DateTime.parse(submission['reported_at'] as String);
 
-        // 악세서리 정렬 (일관성 있는 키 생성을 위해)
-        final sortedAccessories = accessories != null
-            ? (List<String>.from(accessories)..sort()).join(',')
-            : '';
+        // Top 집계
+        final currentTop = topCounts[top];
+        topCounts[top] = currentTop == null
+            ? (count: 1, latestTime: reportedAt)
+            : (
+                count: currentTop.count + 1,
+                latestTime: reportedAt.isAfter(currentTop.latestTime)
+                    ? reportedAt
+                    : currentTop.latestTime,
+              );
 
-        // 전체 조합 키 생성
-        final key =
-            '$top|$bottom|${outerwear ?? ""}|${shoes ?? ""}|$sortedAccessories';
+        // Bottom 집계
+        final currentBottom = bottomCounts[bottom];
+        bottomCounts[bottom] = currentBottom == null
+            ? (count: 1, latestTime: reportedAt)
+            : (
+                count: currentBottom.count + 1,
+                latestTime: reportedAt.isAfter(currentBottom.latestTime)
+                    ? reportedAt
+                    : currentBottom.latestTime,
+              );
 
-        if (combinationCounts.containsKey(key)) {
-          combinationCounts[key]!['count'] += 1;
-        } else {
-          combinationCounts[key] = {
-            'top': top,
-            'bottom': bottom,
-            'outerwear': outerwear,
-            'shoes': shoes,
-            'accessories': accessories != null
-                ? List<String>.from(accessories)
-                : null,
-            'count': 1,
-          };
+        // Outerwear 집계
+        if (outerwear != null && outerwear.isNotEmpty) {
+          final currentOuterwear = outerwearCounts[outerwear];
+          outerwearCounts[outerwear] = currentOuterwear == null
+              ? (count: 1, latestTime: reportedAt)
+              : (
+                  count: currentOuterwear.count + 1,
+                  latestTime: reportedAt.isAfter(currentOuterwear.latestTime)
+                      ? reportedAt
+                      : currentOuterwear.latestTime,
+                );
+        }
+
+        // Shoes 집계
+        if (shoes != null && shoes.isNotEmpty) {
+          final currentShoes = shoesCounts[shoes];
+          shoesCounts[shoes] = currentShoes == null
+              ? (count: 1, latestTime: reportedAt)
+              : (
+                  count: currentShoes.count + 1,
+                  latestTime: reportedAt.isAfter(currentShoes.latestTime)
+                      ? reportedAt
+                      : currentShoes.latestTime,
+                );
+        }
+
+        // Accessories 집계
+        if (accessories != null) {
+          for (final acc in accessories) {
+            final accStr = acc as String;
+            final currentAcc = accessoriesCounts[accStr];
+            accessoriesCounts[accStr] = currentAcc == null
+                ? (count: 1, latestTime: reportedAt)
+                : (
+                    count: currentAcc.count + 1,
+                    latestTime: reportedAt.isAfter(currentAcc.latestTime)
+                        ? reportedAt
+                        : currentAcc.latestTime,
+                  );
+          }
         }
       }
 
-      if (combinationCounts.isEmpty) {
+      // 각 카테고리에서 가장 많이 입은 아이템 찾기 (동점 시 최신 데이터 우선)
+      String? mostPopularTop;
+      String? mostPopularBottom;
+      String? mostPopularOuterwear;
+      String? mostPopularShoes;
+      List<String>? mostPopularAccessories;
+
+      if (topCounts.isNotEmpty) {
+        mostPopularTop = topCounts.entries.reduce((a, b) {
+          if (a.value.count != b.value.count) {
+            return a.value.count > b.value.count ? a : b;
+          }
+          return a.value.latestTime.isAfter(b.value.latestTime) ? a : b;
+        }).key;
+      }
+      if (bottomCounts.isNotEmpty) {
+        mostPopularBottom = bottomCounts.entries.reduce((a, b) {
+          if (a.value.count != b.value.count) {
+            return a.value.count > b.value.count ? a : b;
+          }
+          return a.value.latestTime.isAfter(b.value.latestTime) ? a : b;
+        }).key;
+      }
+      if (outerwearCounts.isNotEmpty) {
+        mostPopularOuterwear = outerwearCounts.entries.reduce((a, b) {
+          if (a.value.count != b.value.count) {
+            return a.value.count > b.value.count ? a : b;
+          }
+          return a.value.latestTime.isAfter(b.value.latestTime) ? a : b;
+        }).key;
+      }
+      if (shoesCounts.isNotEmpty) {
+        mostPopularShoes = shoesCounts.entries.reduce((a, b) {
+          if (a.value.count != b.value.count) {
+            return a.value.count > b.value.count ? a : b;
+          }
+          return a.value.latestTime.isAfter(b.value.latestTime) ? a : b;
+        }).key;
+      }
+      // 악세서리는 상위 3개까지 (동점 시 최신 데이터 우선)
+      if (accessoriesCounts.isNotEmpty) {
+        final sortedAccessories = accessoriesCounts.entries.toList()
+          ..sort((a, b) {
+            if (a.value.count != b.value.count) {
+              return b.value.count.compareTo(a.value.count);
+            }
+            return b.value.latestTime.compareTo(a.value.latestTime);
+          });
+        mostPopularAccessories =
+            sortedAccessories.take(3).map((e) => e.key).toList();
+      }
+
+      if (mostPopularTop == null || mostPopularBottom == null) {
         return null;
       }
 
-      // 가장 많이 입은 조합 찾기
-      var mostPopular = combinationCounts.values.first;
-      for (final combo in combinationCounts.values) {
-        if (combo['count'] > mostPopular['count']) {
-          mostPopular = combo;
-        }
-      }
+      print(
+          'Most popular outfit: $mostPopularTop, $mostPopularBottom (from ${submissions.length} submissions)');
 
       return PopularOutfit(
-        top: mostPopular['top'] as String,
-        bottom: mostPopular['bottom'] as String,
-        outerwear: mostPopular['outerwear'] as String?,
-        shoes: mostPopular['shoes'] as String?,
-        accessories: mostPopular['accessories'] as List<String>?,
-        count: mostPopular['count'] as int,
+        top: mostPopularTop,
+        bottom: mostPopularBottom,
+        outerwear: mostPopularOuterwear,
+        shoes: mostPopularShoes,
+        accessories: mostPopularAccessories,
+        count: submissions.length,
         cityName: cityName,
       );
     } on PostgrestException catch (error) {
