@@ -176,6 +176,29 @@ lib/
     └── submission/      # 착장 제출 플로우
 ```
 
+## 회고
+
+**📝 [프로젝트 회고 보기](RETROSPECTIVE.md)**
+
+이 프로젝트는 Claude AI를 활용한 바이브코딩으로 진행되었습니다. 하루 만에 완성하는 다른 프로젝트들과 달리, **사용자 경험(UX)을 깊이 고민하며 시간을 들여 개발**했습니다.
+
+### 주요 학습 내용
+
+- **마이크로 인터랙션**: 착장 선택 시 0.3초 딜레이로 사용자 피드백 제공
+- **UX 설계**: 시각적 위계를 통한 데이터 수집 유도 (FilledButton vs TextButton)
+- **기술 선택**: 로컬 알림으로 간편함과 개인정보 보호 양립
+- **아키텍처**: GetX MVC 패턴과 Service 레이어 분리로 유지보수성 확보
+
+### 기술 스택 선택 이유
+
+| 기술 | 선택 이유 |
+|------|----------|
+| Flutter + GetX | 크로스 플랫폼 개발, 간결한 상태 관리 |
+| Supabase | PostgreSQL 기반 BaaS, RLS 보안, 무료 티어 |
+| flutter_local_notifications | 원격 푸시 불필요, 개인정보 보호 |
+
+더 자세한 내용은 [프로젝트 회고 문서](RETROSPECTIVE.md)를 참고하세요.
+
 ## 참고 문서
 
 - **PRD (Product Requirements Document)**: `docs/PRD.md`
