@@ -26,6 +26,17 @@
    - 7단계 다중 선택 플로우 (상의 → 하의 → 아우터 → 신발 → 악세서리 → 체감도 → 확인)
    - Supabase 연동 데이터 저장
 
+   <div align="center">
+   <img src="docs/images/image.png" width="200" alt="상의 선택 화면"/>
+   <img src="docs/images/IMG_7619.PNG" width="200" alt="하의 선택 화면"/>
+   <img src="docs/images/IMG_7620.PNG" width="200" alt="아우터 선택 화면"/>
+   <img src="docs/images/IMG_7621.PNG" width="200" alt="신발 선택 화면"/>
+   <img src="docs/images/IMG_7622.PNG" width="200" alt="악세서리 선택 화면"/>
+   <img src="docs/images/IMG_7623.PNG" width="200" alt="착장 확인 화면"/>
+
+   *착장 데이터 제출 플로우: SVG 기반 직관적 UI로 단계별 선택*
+   </div>
+
 2. **날씨 기반 추천 시스템**
    - Open-Meteo API 실시간 날씨 데이터 연동
    - GPS 위치 기반 현재 지역 자동 감지
@@ -33,15 +44,30 @@
    - 실제 사용자 착장 데이터 기반 확률적 추천
    - 온도별 폴백 추천 시스템
 
+   <div align="center">
+   <img src="docs/images/image-2.png" width="200" alt="홈 화면"/>
+   <img src="docs/images/image-3.png" width="200" alt="지역 선택 바텀시트"/>
+
+   *홈 화면: 날씨 정보, 인기 착장 추천, 카테고리별 추천 / 지역 선택: GPS 또는 수동 선택*
+   </div>
+
 3. **인기 착장 추천**
    - 같은 지역, 유사한 온도에서 '딱 좋음'으로 평가받은 착장 데이터 집계
    - 카테고리별(상의/하의/아우터/신발/악세서리) 최다 아이템 조합 표시
    - 실시간 업데이트 및 대체 메시지 처리
 
+   *인기 착장 추천은 홈 화면 상단에 표시됨 (위 홈 화면 이미지 참조)*
+
 4. **알림 설정**
    - 로컬 푸시 알림 기반 매일 정해진 시간 알림
    - Supabase `device_tokens` 테이블로 설정 영구 저장
    - device_id 기반 기기별 독립 관리
+
+   <div align="center">
+   <img src="docs/images/image-4.png" width="200" alt="알림 설정 화면"/>
+
+   *알림 설정: 날씨 알림 토글 및 알림 시간 선택*
+   </div>
 
 5. **사용자 경험**
    - 익명 인증으로 간편한 접근성
