@@ -10,6 +10,7 @@ import 'package:timezone/timezone.dart' as tz;
 import '../../app/routes/app_routes.dart';
 import '../models/notification_settings.dart';
 import 'device_service.dart';
+import 'location_service.dart';
 import 'supabase_service.dart';
 
 /// 알림 설정 관리 서비스
@@ -17,14 +18,17 @@ class NotificationService {
   NotificationService({
     DeviceService? deviceService,
     SupabaseService? supabaseService,
+    LocationService? locationService,
   })  : _deviceService = deviceService ?? DeviceService(),
-        _supabaseService = supabaseService ?? SupabaseService();
+        _supabaseService = supabaseService ?? SupabaseService(),
+        _locationService = locationService ?? LocationService();
 
   static const String _settingsKey = 'notification_settings';
   static const int _notificationId = 0;
 
   final DeviceService _deviceService;
   final SupabaseService _supabaseService;
+  final LocationService _locationService;
   final FlutterLocalNotificationsPlugin _notificationsPlugin =
       FlutterLocalNotificationsPlugin();
 
@@ -113,6 +117,21 @@ class NotificationService {
     // 기존 알림 취소
     await _cancelNotification();
 
+    // 인기 착장 메시지 가져오기
+    String notificationBody = '오늘의 날씨와 추천 착장을 확인하세요!';
+    try {
+      final position = await _locationService.getCurrentPosition();
+      final cityName = await _locationService.getCityName(position);
+      final popularOutfit = await _supabaseService.getPopularOutfit(cityName);
+
+      if (popularOutfit != null) {
+        notificationBody = popularOutfit.buildRecommendationMessage();
+      }
+    } catch (e) {
+      print('🔔 _scheduleNotification - Failed to get popular outfit: $e');
+      // 실패 시 기본 메시지 사용
+    }
+
     // 알림 상세 설정
     const androidDetails = AndroidNotificationDetails(
       'daily_notification',
@@ -153,7 +172,7 @@ class NotificationService {
     await _notificationsPlugin.zonedSchedule(
       _notificationId,
       '오늘 뭐 입음?',
-      '앱을 확인해주세요.',
+      notificationBody,
       scheduledDate,
       notificationDetails,
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
