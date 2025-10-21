@@ -62,11 +62,12 @@ class HomeController extends GetxController {
 
       areaLabel.value = area;
 
-      // 날씨 추천 조회
+      // 날씨 추천 조회 (실제 착장 데이터 기반)
       final data = await _recommendationService.fetchRecommendation(
         latitude: latitude,
         longitude: longitude,
         areaName: area,
+        cityName: cityName,
       );
       recommendation.value = data;
 

@@ -9,8 +9,9 @@ class HomeBinding extends Bindings {
   @override
   void dependencies() {
     Get.lazyPut<LocationService>(() => LocationService());
-    Get.lazyPut<RecommendationService>(() => RecommendationService());
     Get.lazyPut<SupabaseService>(() => SupabaseService());
+    Get.lazyPut<RecommendationService>(
+        () => RecommendationService(supabaseService: Get.find<SupabaseService>()));
     Get.put<HomeController>(HomeController(
       locationService: Get.find<LocationService>(),
       recommendationService: Get.find<RecommendationService>(),
