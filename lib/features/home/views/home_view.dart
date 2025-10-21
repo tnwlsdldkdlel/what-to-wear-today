@@ -89,7 +89,7 @@ class HomeView extends GetView<HomeController> {
         onPressed: () => Get.toNamed(AppRoutes.submissionTop),
         label: const Text('내 착장 공유하기'),
         icon: const Icon(Icons.checkroom_outlined),
-        backgroundColor: AppColors.accent,
+        backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
       ),
     );
@@ -121,21 +121,15 @@ class HomeContent extends GetView<HomeController> {
             return Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: AppColors.justRight.withOpacity(0.1),
+                color: AppColors.primary.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: AppColors.justRight.withOpacity(0.3),
+                  color: AppColors.primary.withOpacity(0.3),
                   width: 1,
                 ),
               ),
               child: Row(
                 children: [
-                  const Icon(
-                    Icons.local_fire_department,
-                    color: AppColors.accent,
-                    size: 24,
-                  ),
-                  const SizedBox(width: 12),
                   Expanded(
                     child: Text(
                       popular.buildRecommendationMessage(),
@@ -182,46 +176,39 @@ class HomeContent extends GetView<HomeController> {
             ),
           );
         }),
-        const SizedBox(height: 24),
-        Text(
-          recommendation.buildSummarySentence(),
-          style:
-              theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
-          textAlign: TextAlign.center,
-        ),
         const SizedBox(height: 8),
         Text(
-          '근처 이용자 착장 데이터를 기반으로 추천합니다.',
+          '같은 지역 이용자의 데이터를 기반으로 추천합니다.',
           style: theme.textTheme.bodyMedium,
           textAlign: TextAlign.center,
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: 16),
         Expanded(
           child: ListView.separated(
             itemBuilder: (context, index) {
               final tiles = [
                 _RecommendationTile(
-                  title: 'TOP',
+                  title: '상의',
                   items: recommendation.tops,
                   chipColor: AppColors.primary,
                 ),
                 _RecommendationTile(
-                  title: 'BOTTOM',
+                  title: '하의',
                   items: recommendation.bottoms,
                   chipColor: AppColors.accent,
                 ),
                 _RecommendationTile(
-                  title: 'OUTER',
+                  title: '아우터',
                   items: recommendation.outerwear,
                   chipColor: AppColors.cold,
                 ),
                 _RecommendationTile(
-                  title: 'SHOES',
+                  title: '신발',
                   items: recommendation.shoes,
                   chipColor: AppColors.justRight,
                 ),
                 _RecommendationTile(
-                  title: 'ACC',
+                  title: '악세서리',
                   items: recommendation.accessories,
                   chipColor: AppColors.hot,
                 ),
@@ -340,12 +327,12 @@ class _RecommendationTile extends StatelessWidget {
     }
     return Card(
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
+        padding: const EdgeInsets.fromLTRB(0, 2, 0, 2),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(title, style: theme.textTheme.titleMedium),
-            const SizedBox(height: 12),
+            const SizedBox(height: 2),
             Wrap(
               spacing: 12,
               runSpacing: 12,

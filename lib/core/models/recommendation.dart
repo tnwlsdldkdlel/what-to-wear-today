@@ -23,7 +23,8 @@ class Recommendation {
     List<RecommendationItem> _parseList(String key) {
       final list = json[key] as List<dynamic>? ?? [];
       return list
-          .map((raw) => RecommendationItem.fromJson(raw as Map<String, dynamic>))
+          .map(
+              (raw) => RecommendationItem.fromJson(raw as Map<String, dynamic>))
           .toList();
     }
 
@@ -38,19 +39,6 @@ class Recommendation {
       accessories: _parseList('accessories'),
     );
   }
-
-  String buildSummarySentence() {
-    final mainItems = <String>[
-      tops.isNotEmpty ? tops.first.label : '',
-      bottoms.isNotEmpty ? bottoms.first.label : '',
-      outerwear.isNotEmpty ? outerwear.first.label : '',
-      shoes.isNotEmpty ? shoes.first.label : '',
-    ].where((item) => item.isNotEmpty).toList();
-
-    final acc = accessories.isNotEmpty ? '와 ${accessories.first.label}' : '';
-    final clothing = mainItems.join(', ');
-    return '$area에서는 $clothing$acc 착장을 많이 입고 있어요.';
-  }
 }
 
 class RecommendationItem {
@@ -62,7 +50,8 @@ class RecommendationItem {
   final String label;
   final double probability;
 
-  factory RecommendationItem.fromJson(Map<String, dynamic> json) => RecommendationItem(
+  factory RecommendationItem.fromJson(Map<String, dynamic> json) =>
+      RecommendationItem(
         label: json['label'] as String,
         probability: (json['probability'] as num).toDouble(),
       );
