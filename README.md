@@ -181,3 +181,4 @@ lib/
 - **PRD (Product Requirements Document)**: `docs/PRD.md`
 - **디자인 가이드**: `docs/DESIGN.md`
 - **개발 가이드**: `CLAUDE.md` - Claude Code 사용 시 참고
+- **프로젝트 회고**: `RETROSPECTIVE.md` - 프로젝트 개발 과정, 배운 점, 개선 사항 등을 정리한 회고 문서
