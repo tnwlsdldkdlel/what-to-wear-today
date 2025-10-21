@@ -26,4 +26,9 @@ Future<void> main() async {
   await notificationService.initialize();
 
   runApp(const OutfitApp());
+
+  // 앱 시작 후 알림 메시지 자동 업데이트 (백그라운드에서 실행)
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    notificationService.updateNotificationMessageIfNeeded();
+  });
 }

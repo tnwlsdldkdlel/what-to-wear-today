@@ -255,4 +255,25 @@ class NotificationService {
       await _scheduleNotification(settings);
     }
   }
+
+  /// 알림 메시지 업데이트 (앱 실행 시 자동 호출)
+  ///
+  /// 알림이 활성화되어 있으면 최신 인기 착장 데이터로 알림 메시지를 조용히 업데이트합니다.
+  /// 사용자에게 보이는 UI 변경 없이 백그라운드에서 실행됩니다.
+  Future<void> updateNotificationMessageIfNeeded() async {
+    try {
+      final settings = await loadSettings();
+      if (settings.isEnabled) {
+        print('🔔 updateNotificationMessageIfNeeded - Updating notification message...');
+        // 조용히 알림 메시지 재설정 (최신 인기 착장 반영)
+        await _scheduleNotification(settings);
+        print('🔔 updateNotificationMessageIfNeeded - Notification message updated successfully');
+      } else {
+        print('🔔 updateNotificationMessageIfNeeded - Notification is disabled, skipping update');
+      }
+    } catch (e) {
+      print('🔔 updateNotificationMessageIfNeeded - Failed to update: $e');
+      // 실패해도 앱 실행에는 영향 없음
+    }
+  }
 }
